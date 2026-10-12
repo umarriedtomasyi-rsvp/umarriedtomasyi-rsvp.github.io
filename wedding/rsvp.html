@@ -218,10 +218,18 @@
             text-align: center;
         }
 
+            /* sized to the words, so the keyboard focus ring hugs the title */
             .page-head h2 {
-                margin-top: 2px;
+                width: fit-content;
+                margin: 2px auto 0;
+                padding-inline: 6px;
+                border-radius: 8px;
                 font-size: clamp(1.5rem, calc(var(--u) * 4.2), 2rem);
             }
+
+                .page-head h2:focus-visible {
+                    outline-offset: 0;
+                }
 
             .page-head .heart {
                 font-size: .6em;
@@ -259,6 +267,13 @@
             justify-content: center;
         }
 
+            /* the form sits at the top: centred, it would jump whenever its
+               height changes (Tidak Hadir, an error, the nav hiding) and the
+               next tap would land on the wrong control */
+            .page-rsvp .page-body:not(.is-done) {
+                justify-content: flex-start;
+            }
+
         @media (prefers-reduced-motion: no-preference) {
             .js .page.is-active .page-body {
                 animation: rise .4s var(--ease) both;
@@ -271,6 +286,7 @@
             font-size: .875rem;
             line-height: 1.5;
             color: var(--ink-soft);
+            text-wrap: balance;
         }
 
         .card {
@@ -494,10 +510,15 @@
             }
         }
 
-        /* phones: while typing, the keyboard needs the room more than the nav */
+        /* phones: while the on-screen keyboard is up (see syncTyping), it needs
+           the room more than the nav; the wish box gets real lines to type in */
         @media (pointer: coarse) {
             .app.is-typing .bottom-nav {
                 display: none;
+            }
+
+            .app.is-typing .field textarea:focus {
+                height: clamp(96px, calc(var(--u) * 22), 140px);
             }
         }
 
@@ -572,7 +593,9 @@
         .page-cover {
             --frame-w: min(calc(min(100vw, 460px) - 32px), 26rem);
             align-items: center;
-            justify-content: center;
+            /* not justify-content:center -- in landscape that pushes the top of
+               the arch above the scroll area; the frame's auto margins centre it */
+            justify-content: flex-start;
             padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 12px);
             /* both glows fade out well before the edges */
             background: radial-gradient(75% 45% at 8% 4%, rgba(248, 230, 233, .95), transparent 70%), radial-gradient(50% 30% at 92% 72%, rgba(242, 218, 196, .5), transparent 70%), var(--page);
@@ -674,7 +697,7 @@
 
         .hero-cta {
             margin-top: clamp(14px, calc(var(--u) * 3.6), 30px);
-            min-width: 15rem;
+            min-width: min(15rem, 100%);
         }
 
         @media (prefers-reduced-motion: no-preference) {
@@ -777,8 +800,9 @@
             transition: border-color .2s var(--ease), background-color .2s var(--ease);
         }
 
+            /* 4.8:1 even on the pink error background */
             .field input::placeholder, .field textarea::placeholder {
-                color: #806b6b;
+                color: #786363;
                 opacity: 1;
             }
 
@@ -797,11 +821,20 @@
                 background: var(--error-wash);
             }
 
+        /* sized in whole lines (2, or 3 on tall screens) so no line is cut in half */
         .field textarea {
             display: block;
-            height: clamp(52px, calc(var(--u) * 8.5), 96px);
+            height: calc(2 * 1.3em + 14px);
+            padding-top: 6px;
+            padding-bottom: 6px;
             resize: none;
-            line-height: 1.45;
+            line-height: 1.3;
+        }
+
+        @media (min-height: 800px) {
+            .field textarea {
+                height: calc(3 * 1.3em + 14px);
+            }
         }
 
         .field-error {
@@ -957,16 +990,18 @@
                 height: 18px;
             }
 
-            .step-btn:hover:not(:disabled) {
+            .step-btn:hover:not([aria-disabled="true"]) {
                 background: var(--rose-wash);
                 border-color: var(--rose-deep);
             }
 
-            .step-btn:active:not(:disabled) {
+            .step-btn:active:not([aria-disabled="true"]) {
                 transform: scale(.94);
             }
 
-            .step-btn:disabled {
+            /* aria-disabled, not disabled: a disabled button would throw
+               keyboard focus off itself when it reaches 1 or 10 */
+            .step-btn[aria-disabled="true"] {
                 opacity: .35;
                 cursor: not-allowed;
             }
@@ -1032,21 +1067,51 @@
             display: none;
         }
 
-        /* one row: long names shorten with "…", "+ New guest" always shows */
+        /* while an error shows, the banner sentence steps aside too (the error
+           says what matters), so the retry button stays above the nav */
+        .has-status .update-banner > p,
+        .has-status .update-banner.slot-only {
+            display: none;
+        }
+
+        #atSubmitBtn {
+            scroll-margin-bottom: 14px;
+        }
+
+        /* one row of full names that scrolls sideways when it runs out of room
+           (wrapping would cost a line); the auto margins centre it when it fits.
+           The vertical padding gives each chip a 40px+ tap area, and the
+           negative margin keeps that from adding height. */
         .mine-chips {
             display: flex;
             gap: 6px;
-            margin-top: 8px;
-            justify-content: center;
+            margin: 4px 0 -4px;
+            padding: 4px 2px;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scrollbar-width: none;
         }
+
+            .mine-chips::-webkit-scrollbar {
+                display: none;
+            }
 
             .mine-chips:empty {
                 display: none;
             }
 
+            .mine-chips > :first-child {
+                margin-left: auto;
+            }
+
+            .mine-chips > :last-child {
+                margin-right: auto;
+            }
+
         .mine-chip {
-            flex: 0 1 auto;
-            min-width: 3.5em;
+            position: relative;
+            flex: none;
+            max-width: 85%;
             min-height: 36px;
             padding: 6px 14px;
             border: 1px solid rgba(156, 74, 96, .5);
@@ -1055,11 +1120,21 @@
             color: var(--rose-deep);
             font-family: var(--sans);
             font-size: .8125rem;
+            cursor: pointer;
+            transition: background-color .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease);
+        }
+
+            .mine-chip::after {
+                content: "";
+                position: absolute;
+                inset: -5px 0;
+            }
+
+        .mine-chip-label {
+            display: block;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            cursor: pointer;
-            transition: background-color .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease);
         }
 
             .mine-chip:hover {
@@ -1131,6 +1206,7 @@
 
         .confirm-msg {
             margin-top: 8px;
+            text-wrap: balance;
         }
 
         .confirm-meta {
@@ -1159,6 +1235,12 @@
             .confirm-actions.two {
                 grid-template-columns: 1fr 1fr;
             }
+
+                .confirm-actions.two .btn {
+                    padding-inline: 8px;
+                    letter-spacing: 0;
+                    white-space: nowrap;
+                }
 
         /* ---------- kalendar ---------- */
         .date-block {
@@ -1317,6 +1399,13 @@
             mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
         }
 
+            /* the fade would clip the keyboard focus ring, so drop it while focused */
+            .wish-list:focus-visible {
+                -webkit-mask-image: none;
+                mask-image: none;
+                outline-offset: -2px;
+            }
+
         .wish-item {
             flex: none;
             padding: 14px 16px;
@@ -1361,8 +1450,8 @@
 
         .wish-del {
             display: none;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             flex: none;
             padding: 0;
             border-radius: 50%;
@@ -1658,12 +1747,16 @@
                 min-height: 44px;
             }
 
+            /* exactly two whole lines in 48px, never a half-cut line */
             .field textarea {
                 height: 48px;
+                padding-top: 3px;
+                padding-bottom: 3px;
+                line-height: 1.25;
             }
 
             .mine-chips {
-                margin-top: 6px;
+                margin-top: 2px;
             }
 
             .mine-chip {
@@ -1673,6 +1766,40 @@
 
             .update-banner {
                 padding: 6px 10px;
+            }
+        }
+
+        /* ---------- narrow phones: chips a little slimmer ---------- */
+        @media (max-width: 380px) {
+            .mine-chips {
+                gap: 4px;
+            }
+
+            .mine-chip {
+                padding-inline: 10px;
+            }
+        }
+
+        /* ---------- 320px-wide phones: keep short labels on one line ---------- */
+        @media (max-width: 340px) {
+            .radio-row {
+                gap: 8px;
+            }
+
+            .radio-opt span {
+                gap: 6px;
+                padding-inline: 6px;
+                white-space: nowrap;
+            }
+
+            .btn-pair .btn {
+                gap: 6px;
+                padding-inline: 8px;
+                white-space: nowrap;
+            }
+
+            .btn-stack .btn {
+                padding-inline: 12px;
             }
         }
 
@@ -1792,7 +1919,7 @@
                             <div class="field">
                                 <label for="atName">Nama Penuh</label>
                                 <input type="text" id="atName" name="name" required autocomplete="name" placeholder="Nama anda" aria-describedby="atNameError">
-                                <p class="field-error" id="atNameError" hidden></p>
+                                <p class="field-error" id="atNameError" role="alert" hidden></p>
                             </div>
 
                             <fieldset class="field">
@@ -2138,24 +2265,33 @@ window.addEventListener('hashchange', () => {
 try{ history.scrollRestoration = 'manual'; }catch(e){}
 showPage(pageFromHash(), false);
 
-/* phones: tuck the bottom nav away while the keyboard is up */
+/* phones: tuck the bottom nav away while the on-screen keyboard is up.
+   "Up" is read from the screen, not from focus alone: a text field has
+   focus AND the page got much shorter (Android shrinks it for the
+   keyboard). Going by focus alone hid the nav with no keyboard showing,
+   left it hidden after Back closed the keyboard, and shifted the form
+   under the guest's finger. iOS lays its keyboard over the page without
+   resizing it, so there nothing moves at all. */
 const TYPING_FIELDS = 'input[type="text"], input[type="number"], textarea';
+let fullHeight = window.innerHeight;
 let typingTimer;
-document.addEventListener('focusin', e => {
-  if (!e.target.matches(TYPING_FIELDS)) return;
+
+function typingFieldFocused(){
+  const el = document.activeElement;
+  return !!el && el.matches(TYPING_FIELDS);
+}
+function syncTyping(){
+  const focused = typingFieldFocused();
+  fullHeight = focused ? Math.max(fullHeight, window.innerHeight) : window.innerHeight;
+  APP.classList.toggle('is-typing', focused && window.innerHeight < fullHeight * 0.8);
+}
+window.addEventListener('resize', syncTyping);
+document.addEventListener('focusin', syncTyping);
+document.addEventListener('focusout', () => {
   clearTimeout(typingTimer);
-  APP.classList.add('is-typing');
-});
-document.addEventListener('focusout', e => {
-  if (!e.target.matches(TYPING_FIELDS)) return;
-  clearTimeout(typingTimer);
-  /* bring the nav back only after the tap that caused the blur is over:
-     doing it at once shifts the layout, and the tap on "Hantar" would
-     land on whatever slid under the finger instead */
-  typingTimer = setTimeout(() => {
-    const el = document.activeElement;
-    if (!el || !el.matches(TYPING_FIELDS)) APP.classList.remove('is-typing');
-  }, 400);
+  /* only once the tap that moved focus is over: the nav reappearing
+     mid-tap would slide "Hantar" out from under the finger */
+  typingTimer = setTimeout(syncTyping, 400);
 });
 
 /* =========================================================
@@ -2294,12 +2430,14 @@ function toggleMusic(){
 /* =========================================================
    OWNER SHEET — open / close
    ---------------------------------------------------------
-   The only overlay left. While it is open the pages behind
-   are inert, Escape (or Back) closes it, and focus goes back
-   to the name field afterwards.
+   The only overlay left. While it is open everything behind
+   it is inert (focus stays inside), and Escape or the phone's
+   Back button closes just the sheet: opening it adds one
+   history entry, so Back undoes the sheet rather than leaving
+   the RSVP page. Focus goes back to the name field afterwards.
    ========================================================= */
 let SHEET_RETURN_FOCUS = null;
-const PAGE_PARTS = ['.pages', '.bottom-nav', '#musicToggle'];
+const PAGE_PARTS = ['.skip-link', '.pages', '.bottom-nav', '#musicToggle'];
 
 function setPageInert(on){
   PAGE_PARTS.forEach(sel => {
@@ -2316,9 +2454,14 @@ function closeSheets(){
   const back = SHEET_RETURN_FOCUS;
   SHEET_RETURN_FOCUS = null;
   if (back && document.contains(back)){ try{ back.focus({ preventScroll: true }); }catch(e){} }
+  /* closed by Kembali / Escape: step back over the sheet's history entry */
+  if (history.state && history.state.sheet){ try{ history.back(); }catch(e){} }
 }
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeSheets();
+});
+window.addEventListener('popstate', () => {
+  if (document.querySelector('.sheet.open')) closeSheets();
 });
 
 /* =========================================================
@@ -2479,7 +2622,9 @@ function newGuestForm(){
 /* banner + the chips that let a guest switch between the entries this
    phone owns, and the line telling them how many slots are left.
    Chips are real buttons; the name travels in a data attribute so an
-   apostrophe in a name cannot break the click handler. */
+   apostrophe in a name cannot break the click handler. The row keeps full
+   names and scrolls sideways, so "+ New guest" comes first where it is
+   always in view, and the chip being edited is scrolled into view. */
 function renderMine(){
   const list    = loadMine();
   const banner  = document.getElementById('updateBanner');
@@ -2487,39 +2632,52 @@ function renderMine(){
   const chips   = document.getElementById('mineChips');
   const slotEl  = document.getElementById('slotNote');
 
-  if (list.length){
-    banner.classList.add('show');
+  /* the quota line first, so the banner knows whether it has anything to say */
+  if (DEVICE_SLOTS.left <= 0){
+    slotEl.textContent = 'This device has registered ' + DEVICE_SLOTS.used + ' of ' +
+                         DEVICE_SLOTS.max + ' guests. You can still update the entries above.';
+    slotEl.classList.add('full');
+  } else if (DEVICE_SLOTS.used > 0){
+    slotEl.textContent = DEVICE_SLOTS.used + ' of ' + DEVICE_SLOTS.max +
+                         ' guests registered from this device.';
+    slotEl.classList.remove('full');
+  } else {
+    slotEl.textContent = '';
+    slotEl.classList.remove('full');
+  }
+
+  const has = list.length > 0;
+  if (has){
     note.innerHTML = EDITING_KEY
       ? 'Editing the RSVP saved on this device. Change anything below and resubmit to update it.'
       : 'New guest &mdash; this will be saved as a separate RSVP on this device.';
-    chips.innerHTML = list.map(m => {
-      const key = nameKey(m.name), active = key === EDITING_KEY;
-      return '<button type="button" class="mine-chip' + (active ? ' active' : '') + '" ' +
-               'data-key="' + escapeHTML(key) + '" aria-pressed="' + active + '" title="' + escapeHTML(m.name) + '">' +
-               escapeHTML(m.name) + '</button>';
-    }).join('') +
+    chips.innerHTML =
       (DEVICE_SLOTS.left > 0
         ? '<button type="button" class="mine-chip add" data-action="new">+ New guest</button>'
-        : '');
+        : '') +
+      list.map(m => {
+        const key = nameKey(m.name), active = key === EDITING_KEY;
+        return '<button type="button" class="mine-chip' + (active ? ' active' : '') + '" ' +
+                 'data-key="' + escapeHTML(key) + '" aria-pressed="' + active + '" title="' + escapeHTML(m.name) + '">' +
+                 '<span class="mine-chip-label">' + escapeHTML(m.name) + '</span></button>';
+      }).join('');
   } else {
-    banner.classList.remove('show');
     chips.innerHTML = '';
   }
-  document.getElementById('rsvpBody').classList.toggle('is-editing', list.length > 0);
+  /* with no saved entries the banner still shows the quota line, if any
+     (e.g. browser data cleared but the database counts this device) */
+  note.hidden = !has;
+  banner.classList.toggle('show', has || !!slotEl.textContent);
+  banner.classList.toggle('slot-only', !has);
+  document.getElementById('rsvpBody').classList.toggle('is-editing', banner.classList.contains('show'));
 
-  if (slotEl){
-    if (DEVICE_SLOTS.left <= 0){
-      slotEl.textContent = 'This device has registered ' + DEVICE_SLOTS.used + ' of ' +
-                           DEVICE_SLOTS.max + ' guests. You can still update the entries above.';
-      slotEl.classList.add('full');
-    } else if (DEVICE_SLOTS.used > 0){
-      slotEl.textContent = DEVICE_SLOTS.used + ' of ' + DEVICE_SLOTS.max +
-                           ' guests registered from this device.';
-      slotEl.classList.remove('full');
-    } else {
-      slotEl.textContent = '';
-      slotEl.classList.remove('full');
-    }
+  /* scroll only as far as needed to show the chip being edited */
+  const activeChip = chips.querySelector('.mine-chip.active');
+  if (activeChip){
+    const left  = activeChip.offsetLeft - chips.offsetLeft;
+    const right = left + activeChip.offsetWidth;
+    if (left < chips.scrollLeft) chips.scrollLeft = left - 4;
+    else if (right > chips.scrollLeft + chips.clientWidth) chips.scrollLeft = right - chips.clientWidth + 4;
   }
 }
 document.getElementById('mineChips').addEventListener('click', e => {
@@ -2563,8 +2721,14 @@ function setNameError(msg){
     input.removeAttribute('aria-invalid');
   }
 }
+/* while a message shows, the banner sentence steps aside (CSS .has-status)
+   and the retry button is brought into view, so it never hides behind the nav */
 function setFormStatus(msg){
   document.getElementById('formStatus').textContent = msg || '';
+  document.getElementById('rsvpBody').classList.toggle('has-status', !!msg);
+  if (msg) requestAnimationFrame(() => {
+    try{ document.getElementById('atSubmitBtn').scrollIntoView({ block: 'nearest' }); }catch(e){}
+  });
 }
 document.getElementById('atName').addEventListener('input', function(){
   if (this.getAttribute('aria-invalid') === 'true' && this.value.trim()) setNameError('');
@@ -2590,10 +2754,13 @@ function clampPax(v){
   if (isNaN(v)) v = PAX_MIN;
   return Math.min(PAX_MAX, Math.max(PAX_MIN, v));
 }
-/* buttons + caption only -- never touches the typed text */
+/* buttons + caption only -- never touches the typed text. The limit is
+   shown with aria-disabled rather than disabled, so a keyboard user who
+   presses down to 1 (or up to 10) keeps focus on the button; stepPax()
+   clamps, so a press at the limit simply does nothing. */
 function paintPax(v){
-  document.getElementById('paxMinus').disabled = (v <= PAX_MIN);
-  document.getElementById('paxPlus').disabled  = (v >= PAX_MAX);
+  document.getElementById('paxMinus').setAttribute('aria-disabled', v <= PAX_MIN ? 'true' : 'false');
+  document.getElementById('paxPlus').setAttribute('aria-disabled', v >= PAX_MAX ? 'true' : 'false');
   document.getElementById('paxHint').textContent =
     v === PAX_MIN ? 'Seorang sahaja' : v + ' orang (termasuk anda)';
 }
@@ -2943,6 +3110,8 @@ function openOwner(){
   el.classList.add('open');
   el.scrollTop = 0;
   setPageInert(true);
+  /* one history entry, so the phone's Back button closes just the sheet */
+  try{ history.pushState({ sheet: 'owner' }, '', location.href); }catch(e){}
   const first = el.querySelector('.icon-btn');
   if (first) requestAnimationFrame(() => first.focus({ preventScroll: true }));
 }
