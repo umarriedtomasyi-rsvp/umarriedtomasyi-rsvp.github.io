@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Umar &amp; Masyitah — RSVP</title>
     <meta name="description" content="RSVP Umar &amp; Masyitah — 19 Disember 2026">
     <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
@@ -38,12 +38,23 @@
             --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
             --sans: 'Jost', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             --radius: 14px;
-            --radius-lg: 22px;
-            --shadow: 0 1px 2px rgba(74, 58, 58, .04), 0 12px 32px rgba(120, 78, 90, .08);
-            --header-h: 60px;
-            --nav-h: 68px;
+            --radius-lg: 20px;
+            --shadow: 0 1px 2px rgba(74, 58, 58, .04), 0 10px 28px rgba(120, 78, 90, .08);
+            --nav-h: 64px;
             --ease: cubic-bezier(.2, .7, .2, 1);
+
+            /* every page has to fit one phone screen, so sizes follow the
+               screen height: --u is 1% of the smallest visible height */
+            --u: 1vh;
+            --gap: clamp(8px, calc(var(--u) * 1.6), 18px);
+            --ctl: clamp(40px, calc(var(--u) * 6.6), 52px);
             color-scheme: light;
+        }
+
+        @supports (height: 1svh) {
+            :root {
+                --u: 1svh;
+            }
         }
 
         *, *::before, *::after {
@@ -52,35 +63,15 @@
 
         html {
             -webkit-text-size-adjust: 100%;
-            /* phones: no top bar, but keep focused fields clear of the bottom nav */
-            scroll-padding-top: 16px;
-            scroll-padding-bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));
-        }
-
-        @media (min-width: 760px) {
-            html {
-                scroll-padding-top: calc(var(--header-h) + 16px);
-                scroll-padding-bottom: 16px;
-            }
-        }
-
-        @media (prefers-reduced-motion: no-preference) {
-            html {
-                scroll-behavior: smooth;
-            }
-        }
-
-        html.sheet-open {
-            overflow: hidden;
         }
 
         body {
             margin: 0;
-            background: var(--page);
+            background: var(--blush);
             color: var(--ink);
             font-family: var(--sans);
-            font-size: 1.0625rem;
-            line-height: 1.65;
+            font-size: 1rem;
+            line-height: 1.55;
             -webkit-font-smoothing: antialiased;
             -webkit-tap-highlight-color: transparent;
         }
@@ -116,8 +107,25 @@
             outline-offset: 3px;
         }
 
+        [tabindex="-1"]:focus:not(:focus-visible) {
+            outline: none;
+        }
+
         [hidden] {
             display: none !important;
+        }
+
+        /* read by screen readers, not shown (the page title already says it) */
+        .sr-only {
+            position: absolute !important;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+            border: 0;
         }
 
         .skip-link {
@@ -139,9 +147,145 @@
 
         .eyebrow {
             font-family: var(--sans);
-            font-size: .75rem;
+            font-size: .6875rem;
             font-weight: 500;
             letter-spacing: .24em;
+            text-transform: uppercase;
+            color: var(--gold-deep);
+        }
+
+        /* ---------- app shell: one screen at a time ---------- */
+        .app {
+            position: relative;
+            max-width: 460px;
+            margin: 0 auto;
+            background: var(--page);
+            box-shadow: 0 0 60px rgba(120, 78, 90, .12);
+        }
+
+        .js body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .js .app {
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .pages {
+            position: relative;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .page {
+            display: flex;
+            flex-direction: column;
+            padding: calc(env(safe-area-inset-top) + 8px) 16px 22px;
+        }
+
+        /* with JS, pages sit on top of each other and only one shows;
+           without it they simply stack, so nothing is ever lost */
+        .js .page {
+            position: absolute;
+            inset: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .28s var(--ease), visibility 0s linear .28s;
+        }
+
+            .js .page.is-active {
+                opacity: 1;
+                visibility: visible;
+                transition: opacity .28s var(--ease), visibility 0s;
+            }
+
+        .page-head {
+            flex: none;
+            display: grid;
+            grid-template-columns: 44px 1fr 44px;
+            align-items: center;
+            gap: 8px;
+            min-height: 48px;
+            margin-bottom: var(--gap);
+            text-align: center;
+        }
+
+            .page-head h2 {
+                margin-top: 2px;
+                font-size: clamp(1.5rem, calc(var(--u) * 4.2), 2rem);
+            }
+
+            .page-head .heart {
+                font-size: .6em;
+                color: var(--rose-deep);
+                vertical-align: .2em;
+            }
+
+        .home-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: var(--paper);
+            display: grid;
+            place-items: center;
+            transition: border-color .2s var(--ease), background-color .2s var(--ease);
+        }
+
+            .home-btn:hover {
+                border-color: var(--rose);
+                background: var(--blush-soft);
+            }
+
+            .home-btn img {
+                width: 22px;
+                height: auto;
+            }
+
+        /* the body grows to fill the screen and centres what it holds;
+           if a very short screen cannot hold it, the page scrolls itself */
+        .page-body {
+            flex: 1 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            .js .page.is-active .page-body {
+                animation: rise .4s var(--ease) both;
+            }
+        }
+
+        .lede {
+            margin-bottom: var(--gap);
+            text-align: center;
+            font-size: .875rem;
+            line-height: 1.5;
+            color: var(--ink-soft);
+        }
+
+        .card {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: clamp(14px, calc(var(--u) * 2.4), 24px) 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .mini-title {
+            font-family: var(--sans);
+            font-size: .6875rem;
+            font-weight: 500;
+            letter-spacing: .22em;
             text-transform: uppercase;
             color: var(--gold-deep);
         }
@@ -151,16 +295,16 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            min-height: 52px;
-            padding: 13px 26px;
+            gap: 8px;
+            min-height: var(--ctl);
+            padding: 10px 20px;
             border: 1px solid transparent;
             border-radius: 999px;
             font-family: var(--sans);
             font-size: .9375rem;
             font-weight: 500;
-            letter-spacing: .03em;
-            line-height: 1.3;
+            letter-spacing: .02em;
+            line-height: 1.25;
             text-align: center;
             text-decoration: none;
             cursor: pointer;
@@ -197,7 +341,7 @@
             }
 
         .btn-outline {
-            background: rgba(255, 253, 252, .6);
+            background: rgba(255, 253, 252, .7);
             color: var(--rose-deep);
             border-color: rgba(156, 74, 96, .5);
         }
@@ -217,32 +361,43 @@
             transform: none;
         }
 
-        .btn-row {
+        .btn-stack {
             display: grid;
-            gap: 12px;
-            margin-top: 28px;
+            gap: 10px;
         }
+
+        .btn-pair {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+            .btn-pair .btn {
+                padding-inline: 12px;
+            }
 
         .btn-text {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            min-height: 44px;
-            padding: 8px 16px;
+            min-height: 40px;
+            padding: 6px 14px;
             border: 0;
             border-radius: 999px;
             background: none;
             color: var(--rose-deep);
             font-family: var(--sans);
-            font-size: .875rem;
+            font-size: .8125rem;
             font-weight: 500;
             letter-spacing: .06em;
+            white-space: nowrap;
+            flex: none;
             cursor: pointer;
             transition: background-color .2s var(--ease);
         }
 
             .btn-text:hover {
-                background: rgba(255, 253, 252, .8);
+                background: var(--rose-wash);
             }
 
             .btn-text svg {
@@ -290,140 +445,60 @@
             }
         }
 
-        /* ---------- desktop header (appears once the cover scrolls away) ---------- */
-        .site-header {
-            position: fixed;
-            inset: 0 0 auto 0;
-            z-index: 50;
-            height: var(--header-h);
-            background: rgba(255, 250, 249, .9);
-            -webkit-backdrop-filter: saturate(1.2) blur(10px);
-            backdrop-filter: saturate(1.2) blur(10px);
-            border-bottom: 1px solid var(--line);
-            transition: transform .35s var(--ease), visibility 0s;
-        }
-
-        .js body:not(.past-hero) .site-header {
-            transform: translateY(-100%);
-            visibility: hidden;
-            transition: transform .35s var(--ease), visibility 0s linear .35s;
-        }
-
-        .header-inner {
-            max-width: 64rem;
-            height: 100%;
-            margin: 0 auto;
-            padding: 0 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-        }
-
-        .brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            min-height: 44px;
-            color: var(--ink);
-            text-decoration: none;
-            font-family: var(--serif);
-            font-size: 1.1875rem;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-            .brand img {
-                width: 28px;
-                height: auto;
+        /* uses `translate`, not `transform`, so hover lifts still work after it */
+        @keyframes rise {
+            from {
+                opacity: 0;
+                translate: 0 10px;
             }
 
-        .header-nav {
-            display: flex;
-            gap: 4px;
-        }
-
-            .header-nav a {
-                position: relative;
-                padding: 10px 12px;
-                color: var(--ink-soft);
-                text-decoration: none;
-                font-size: .75rem;
-                font-weight: 500;
-                letter-spacing: .16em;
-                text-transform: uppercase;
-                transition: color .2s var(--ease);
-            }
-
-                .header-nav a::after {
-                    content: "";
-                    position: absolute;
-                    left: 12px;
-                    right: 12px;
-                    bottom: 6px;
-                    height: 1px;
-                    background: var(--rose);
-                    transform: scaleX(0);
-                    transition: transform .25s var(--ease);
-                }
-
-                .header-nav a:hover, .header-nav a.active {
-                    color: var(--rose-deep);
-                }
-
-                    .header-nav a:hover::after, .header-nav a.active::after {
-                        transform: scaleX(1);
-                    }
-
-        .header-rsvp {
-            display: inline-flex;
-            align-items: center;
-            min-height: 40px;
-            padding: 0 20px;
-            border-radius: 999px;
-            background: var(--rose-deep);
-            color: #fff;
-            text-decoration: none;
-            font-size: .75rem;
-            font-weight: 500;
-            letter-spacing: .18em;
-            text-transform: uppercase;
-            transition: background-color .2s var(--ease);
-        }
-
-            .header-rsvp:hover {
-                background: var(--rose-darker);
-            }
-
-        @media (max-width: 759px) {
-            .site-header {
-                display: none;
+            to {
+                opacity: 1;
+                translate: none;
             }
         }
 
-        /* ---------- mobile bottom nav (thumb reach, like the original tab bar) ---------- */
+        @keyframes fade {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ---------- bottom nav (thumb reach, like the original tab bar) ---------- */
         .bottom-nav {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            flex: none;
+            position: relative;
             z-index: 50;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             align-items: end;
-            padding: 6px max(6px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
-            background: rgba(255, 250, 249, .95);
-            -webkit-backdrop-filter: saturate(1.2) blur(10px);
-            backdrop-filter: saturate(1.2) blur(10px);
+            min-height: var(--nav-h);
+            padding: 4px max(6px, env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+            background: rgba(255, 250, 249, .97);
             border-top: 1px solid var(--line);
             box-shadow: 0 -6px 24px rgba(120, 78, 90, .06);
-            transition: transform .35s var(--ease), visibility 0s;
         }
 
-        .js body:not(.past-hero) .bottom-nav {
-            transform: translateY(110%);
-            visibility: hidden;
-            transition: transform .35s var(--ease), visibility 0s linear .35s;
+        html:not(.js) .bottom-nav,
+        .app[data-page="utama"] .bottom-nav {
+            display: none;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            .bottom-nav {
+                animation: rise .35s var(--ease) both;
+            }
+        }
+
+        /* phones: while typing, the keyboard needs the room more than the nav */
+        @media (pointer: coarse) {
+            .app.is-typing .bottom-nav {
+                display: none;
+            }
         }
 
         .nav-item {
@@ -453,7 +528,7 @@
                 color: var(--rose-deep);
             }
 
-            /* a small dot, so the current section is not shown by colour alone */
+            /* a small dot, so the current page is not shown by colour alone */
             .nav-item::after {
                 content: "";
                 position: absolute;
@@ -475,9 +550,9 @@
         }
 
             .nav-rsvp .fab {
-                width: 52px;
-                height: 52px;
-                margin-top: -24px;
+                width: 50px;
+                height: 50px;
+                margin-top: -18px;
                 margin-bottom: 1px;
                 border-radius: 50%;
                 border: 3px solid var(--page);
@@ -493,30 +568,21 @@
                 background: var(--rose-darker);
             }
 
-        @media (min-width: 760px) {
-            .bottom-nav {
-                display: none;
-            }
-        }
-
-        /* ---------- cover / hero ---------- */
-        .hero {
-            --frame-w: min(calc(100vw - 32px), 28rem);
-            position: relative;
-            min-height: 100vh;
-            min-height: 100svh;
-            display: grid;
-            place-items: center;
-            padding: clamp(24px, 5vh, 56px) 16px;
-            overflow: hidden;
-            /* both glows fade out well before the edges, so the cover melts into the page */
-            background: radial-gradient(70% 45% at 8% 4%, rgba(248, 230, 233, .95), transparent 70%), radial-gradient(48% 30% at 92% 70%, rgba(242, 218, 196, .5), transparent 70%), var(--page);
+        /* ---------- cover ---------- */
+        .page-cover {
+            --frame-w: min(calc(min(100vw, 460px) - 32px), 26rem);
+            align-items: center;
+            justify-content: center;
+            padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 12px);
+            /* both glows fade out well before the edges */
+            background: radial-gradient(75% 45% at 8% 4%, rgba(248, 230, 233, .95), transparent 70%), radial-gradient(50% 30% at 92% 72%, rgba(242, 218, 196, .5), transparent 70%), var(--page);
         }
 
         .hero-frame {
             position: relative;
             width: var(--frame-w);
-            padding: clamp(52px, 9vh, 84px) clamp(22px, 6vw, 44px) clamp(36px, 6vh, 56px);
+            margin: auto 0;
+            padding: clamp(30px, calc(var(--u) * 7.5), 76px) clamp(18px, 5vw, 36px) clamp(20px, calc(var(--u) * 4.5), 44px);
             text-align: center;
             background: linear-gradient(180deg, rgba(248, 230, 233, .45), rgba(255, 253, 252, .55) 55%);
             border: 1px solid rgba(182, 144, 90, .6);
@@ -534,15 +600,15 @@
             }
 
         .hero-mono {
-            width: 64px;
+            width: clamp(40px, calc(var(--u) * 8), 64px);
             height: auto;
-            margin: 0 auto 22px;
+            margin: 0 auto clamp(10px, calc(var(--u) * 2.4), 22px);
         }
 
         .hero-names {
-            margin-top: 14px;
+            margin-top: clamp(6px, calc(var(--u) * 1.6), 14px);
             font-family: var(--script);
-            font-size: clamp(3.5rem, 17vw, 5rem);
+            font-size: clamp(2.75rem, min(17vw, calc(var(--u) * 9)), 5rem);
             font-weight: 400;
             line-height: 1.05;
             color: var(--rose-deep);
@@ -565,7 +631,7 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
-            margin: 22px auto 20px;
+            margin: clamp(10px, calc(var(--u) * 2.6), 22px) auto clamp(8px, calc(var(--u) * 2.2), 20px);
             color: var(--gold);
         }
 
@@ -586,52 +652,29 @@
 
         .hero-date {
             font-family: var(--serif);
-            font-size: clamp(1.375rem, 5.5vw, 1.625rem);
+            font-size: clamp(1.25rem, calc(var(--u) * 3.3), 1.625rem);
             font-weight: 500;
         }
 
         .hero-hijri {
             margin-top: 2px;
             font-family: var(--serif);
-            font-size: 1.125rem;
+            font-size: 1.0625rem;
             font-style: italic;
             color: var(--ink-soft);
         }
 
         .hero-meta {
-            margin-top: 14px;
+            margin-top: clamp(6px, calc(var(--u) * 1.6), 14px);
             font-size: .9375rem;
-            line-height: 1.6;
+            line-height: 1.55;
             letter-spacing: .02em;
             color: var(--ink-soft);
         }
 
         .hero-cta {
-            margin-top: 30px;
+            margin-top: clamp(14px, calc(var(--u) * 3.6), 30px);
             min-width: 15rem;
-        }
-
-        /* uses `translate`, not `transform`, so hover lifts still work after it */
-        @keyframes rise {
-            from {
-                opacity: 0;
-                translate: 0 12px;
-            }
-
-            to {
-                opacity: 1;
-                translate: none;
-            }
-        }
-
-        @keyframes fade {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
         }
 
         @media (prefers-reduced-motion: no-preference) {
@@ -652,97 +695,65 @@
                     .hero-frame > :nth-child(8) { animation-delay: .52s; }
         }
 
-        /* ---------- sections ---------- */
-        .section {
-            padding: clamp(64px, 12vw, 120px) 16px;
-        }
-
-        .section-tint {
-            background: var(--blush);
-        }
-
-        .container {
-            max-width: 36rem;
-            margin: 0 auto;
-        }
-
-        .section-head {
-            text-align: center;
-            margin-bottom: clamp(28px, 5vw, 40px);
-        }
-
-            .section-head h2 {
-                margin-top: 10px;
-                font-size: clamp(2.25rem, 8vw, 3rem);
-            }
-
-                .section-head h2::after {
-                    content: "";
-                    display: block;
-                    width: 40px;
-                    height: 1px;
-                    margin: 18px auto 0;
-                    background: var(--gold);
-                }
-
-            .section-head .heart {
-                font-size: .6em;
-                color: var(--rose-deep);
-                vertical-align: .2em;
-            }
-
-        .lede {
-            margin-top: 18px;
-            color: var(--ink-soft);
-        }
-
-        .card {
-            background: var(--paper);
-            border: 1px solid var(--line);
-            border-radius: var(--radius-lg);
-            padding: clamp(22px, 5vw, 36px);
-            box-shadow: var(--shadow);
-        }
-
-        .mini-title {
-            font-family: var(--sans);
-            font-size: .75rem;
-            font-weight: 500;
-            letter-spacing: .22em;
-            text-transform: uppercase;
+        /* ---------- music toggle (top right, on every page) ---------- */
+        .music-toggle {
+            position: absolute;
+            top: calc(env(safe-area-inset-top) + 10px);
+            right: 16px;
+            z-index: 60;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 50%;
+            border: 1px solid rgba(127, 98, 54, .45);
+            background: rgba(255, 253, 252, .94);
             color: var(--gold-deep);
+            display: grid;
+            place-items: center;
+            box-shadow: 0 4px 14px rgba(120, 78, 90, .12);
+            cursor: pointer;
+            transition: border-color .2s var(--ease), background-color .2s var(--ease);
         }
 
-        /* gentle reveal; only hidden when JS is there to show it again */
-        .js .reveal {
-            opacity: 0;
-            transform: translateY(16px);
-            transition: opacity .7s var(--ease), transform .7s var(--ease);
-        }
-
-            .js .reveal.is-visible {
-                opacity: 1;
-                transform: none;
+            .music-toggle:hover {
+                border-color: var(--gold-deep);
+                background: var(--paper);
             }
+
+            .music-toggle svg {
+                width: 20px;
+                height: 20px;
+            }
+
+        html:not(.js) .music-toggle {
+            position: fixed;
+        }
 
         /* ---------- RSVP form ---------- */
         .field {
-            margin: 0 0 26px;
+            margin: 0 0 var(--gap);
             padding: 0;
             border: 0;
             min-width: 0;
         }
 
-            .field > label, .field > legend {
+            .field > label, .field > legend, .label-row > label, .pax-text > label {
                 display: block;
-                margin-bottom: 10px;
+                margin-bottom: 5px;
                 padding: 0;
-                font-size: .8125rem;
+                font-size: .75rem;
                 font-weight: 500;
                 letter-spacing: .12em;
                 text-transform: uppercase;
                 color: var(--ink);
             }
+
+        .label-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+        }
 
         .optional {
             font-weight: 400;
@@ -755,13 +766,13 @@
         .field input[type="number"],
         .field textarea {
             width: 100%;
-            min-height: 52px;
-            padding: 12px 16px;
+            min-height: var(--ctl);
+            padding: 8px 14px;
             border: 1px solid var(--line-strong);
             border-radius: 12px;
             background: #fff;
             font: inherit;
-            font-size: 1.0625rem; /* 17px: phones will not zoom in on focus */
+            font-size: 1rem; /* 16px: phones will not zoom in on focus */
             color: var(--ink);
             transition: border-color .2s var(--ease), background-color .2s var(--ease);
         }
@@ -787,38 +798,39 @@
             }
 
         .field textarea {
-            min-height: 124px;
-            resize: vertical;
-            line-height: 1.55;
+            display: block;
+            height: clamp(52px, calc(var(--u) * 8.5), 96px);
+            resize: none;
+            line-height: 1.45;
         }
 
         .field-error {
             display: flex;
             align-items: flex-start;
-            gap: 8px;
-            margin-top: 8px;
-            font-size: .9375rem;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: .875rem;
+            line-height: 1.4;
             color: var(--error);
         }
 
             .field-error svg {
-                width: 18px;
-                height: 18px;
+                width: 16px;
+                height: 16px;
                 flex: none;
-                margin-top: 3px;
+                margin-top: 2px;
             }
 
         .charcount {
-            margin-top: 6px;
-            text-align: right;
-            font-size: .8125rem;
+            font-size: .75rem;
             color: var(--ink-soft);
+            white-space: nowrap;
         }
 
         .radio-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 10px;
         }
 
         .radio-opt {
@@ -842,9 +854,9 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 10px;
-                min-height: 54px;
-                padding: 12px;
+                gap: 8px;
+                min-height: var(--ctl);
+                padding: 6px 10px;
                 border: 1px solid var(--line-strong);
                 border-radius: 12px;
                 background: #fff;
@@ -885,20 +897,37 @@
                 outline-offset: 2px;
             }
 
+        /* headcount: label + caption on the left, stepper on the right, one row */
+        .pax-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .pax-text {
+            min-width: 0;
+        }
+
+            .pax-text > label {
+                margin-bottom: 2px;
+            }
+
         .stepper {
             display: grid;
-            grid-template-columns: 52px 1fr 52px;
-            gap: 12px;
+            grid-template-columns: var(--ctl) 64px var(--ctl);
+            gap: 8px;
             align-items: center;
+            flex: none;
         }
 
             .stepper input[type="number"] {
+                padding: 2px;
                 text-align: center;
                 font-family: var(--serif);
-                font-size: 1.75rem;
+                font-size: 1.5rem;
                 font-weight: 500;
                 font-variant-numeric: lining-nums; /* old-style "1" reads as "I" */
-                padding: 4px;
                 -moz-appearance: textfield;
                 appearance: textfield;
             }
@@ -910,8 +939,8 @@
                 }
 
         .step-btn {
-            width: 52px;
-            height: 52px;
+            width: var(--ctl);
+            height: var(--ctl);
             padding: 0;
             border-radius: 50%;
             border: 1px solid rgba(156, 74, 96, .5);
@@ -943,19 +972,19 @@
             }
 
         .step-hint {
-            margin-top: 8px;
-            text-align: center;
-            font-size: .875rem;
+            font-size: .8125rem;
+            line-height: 1.35;
             color: var(--ink-soft);
         }
 
         .form-status {
-            margin: 0 0 16px;
-            padding: 12px 16px;
+            margin: 0 0 10px;
+            padding: 10px 14px;
             border-radius: 12px;
             background: var(--error-wash);
             color: var(--error);
-            font-size: .9375rem;
+            font-size: .875rem;
+            line-height: 1.4;
         }
 
             .form-status:empty {
@@ -965,24 +994,30 @@
             }
 
         .disclaimer {
-            margin-top: 18px;
+            margin-top: 10px;
             text-align: center;
-            font-size: .875rem;
-            line-height: 1.6;
+            font-size: .75rem;
+            line-height: 1.45;
             color: var(--ink-soft);
+        }
+
+        @media (max-width: 400px) {
+            .disclaimer {
+                font-size: .6875rem;
+            }
         }
 
         /* returning guest */
         .update-banner {
             display: none;
-            margin-bottom: 22px;
-            padding: 14px 16px;
+            margin-bottom: var(--gap);
+            padding: 8px 12px;
             border: 1px solid var(--line);
-            border-radius: var(--radius);
+            border-radius: 12px;
             background: var(--blush-soft);
             color: var(--ink);
-            font-size: .9375rem;
-            line-height: 1.55;
+            font-size: .75rem;
+            line-height: 1.4;
             text-align: center;
         }
 
@@ -990,12 +1025,19 @@
                 display: block;
             }
 
+        /* the banner already explains resubmitting, so the intro line and the
+           footnote step aside while it shows -- keeps the form on one screen */
+        .is-editing .lede,
+        .is-editing .disclaimer {
+            display: none;
+        }
+
+        /* one row: long names shorten with "…", "+ New guest" always shows */
         .mine-chips {
             display: flex;
-            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
             justify-content: center;
-            gap: 8px;
-            margin-top: 12px;
         }
 
             .mine-chips:empty {
@@ -1003,15 +1045,16 @@
             }
 
         .mine-chip {
-            max-width: 100%;
-            min-height: 40px;
-            padding: 8px 16px;
+            flex: 0 1 auto;
+            min-width: 3.5em;
+            min-height: 36px;
+            padding: 6px 14px;
             border: 1px solid rgba(156, 74, 96, .5);
             border-radius: 999px;
             background: #fff;
             color: var(--rose-deep);
             font-family: var(--sans);
-            font-size: .875rem;
+            font-size: .8125rem;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -1031,15 +1074,13 @@
             }
 
             .mine-chip.add {
+                flex: none;
                 border-style: dashed;
                 border-color: var(--gold-deep);
                 color: var(--gold-deep);
             }
 
         .slot-note {
-            margin-bottom: 18px;
-            text-align: center;
-            font-size: .875rem;
             color: var(--ink-soft);
         }
 
@@ -1051,10 +1092,9 @@
                 color: var(--error);
             }
 
-        /* confirmation */
+        /* confirmation (takes the form's place until the guest edits again) */
         .confirm {
-            margin-top: 20px;
-            padding: 34px 24px 30px;
+            padding: clamp(22px, calc(var(--u) * 4), 34px) 20px;
             text-align: center;
             background: var(--paper);
             border: 1px solid rgba(156, 74, 96, .3);
@@ -1064,14 +1104,14 @@
 
         @media (prefers-reduced-motion: no-preference) {
             .confirm {
-                animation: rise .5s var(--ease) both;
+                animation: rise .45s var(--ease) both;
             }
         }
 
         .confirm-icon {
             width: 56px;
             height: 56px;
-            margin: 0 auto 16px;
+            margin: 0 auto 14px;
             border-radius: 50%;
             background: var(--rose-wash);
             color: var(--rose-deep);
@@ -1085,7 +1125,7 @@
             }
 
         .confirm-title {
-            font-size: 1.875rem;
+            font-size: 1.75rem;
             overflow-wrap: anywhere;
         }
 
@@ -1095,8 +1135,8 @@
 
         .confirm-meta {
             display: inline-block;
-            margin-top: 14px;
-            padding: 6px 14px;
+            margin-top: 12px;
+            padding: 5px 14px;
             border-radius: 999px;
             background: var(--blush);
             color: var(--ink);
@@ -1105,19 +1145,29 @@
         }
 
         .confirm-note {
-            margin-top: 10px;
-            font-size: .875rem;
+            margin-top: 8px;
+            font-size: .8125rem;
             color: var(--ink-soft);
         }
 
-        /* ---------- kalendar (date + countdown) ---------- */
+        .confirm-actions {
+            display: grid;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+            .confirm-actions.two {
+                grid-template-columns: 1fr 1fr;
+            }
+
+        /* ---------- kalendar ---------- */
         .date-block {
             text-align: center;
         }
 
         .date-main {
             font-family: var(--serif);
-            font-size: clamp(1.75rem, 6.5vw, 2.25rem);
+            font-size: clamp(1.625rem, calc(var(--u) * 4.6), 2.25rem);
             font-weight: 500;
             line-height: 1.2;
             color: var(--rose-deep);
@@ -1130,33 +1180,33 @@
             }
 
         .date-hijri {
-            margin-top: 6px;
+            margin-top: 4px;
             font-family: var(--serif);
-            font-size: 1.25rem;
+            font-size: 1.1875rem;
             font-style: italic;
             color: var(--ink-soft);
         }
 
         .date-time {
-            margin-top: 10px;
+            margin-top: 8px;
             letter-spacing: .08em;
         }
 
         .countdown-wrap {
-            margin-top: 40px;
+            margin: calc(var(--gap) * 1.6) 0;
             text-align: center;
         }
 
         .countdown {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            max-width: 23rem;
-            margin: 16px auto 0;
+            gap: 8px;
+            max-width: 22rem;
+            margin: 12px auto 0;
         }
 
             .countdown .box {
-                padding: 14px 4px 12px;
+                padding: clamp(10px, calc(var(--u) * 1.8), 16px) 4px;
                 border: 1px solid var(--line);
                 border-radius: var(--radius);
                 background: var(--paper);
@@ -1164,7 +1214,7 @@
 
             .countdown .num {
                 font-family: var(--serif);
-                font-size: 2rem;
+                font-size: clamp(1.625rem, calc(var(--u) * 4.4), 2.125rem);
                 font-weight: 500;
                 line-height: 1;
                 color: var(--rose-deep);
@@ -1173,40 +1223,50 @@
 
             .countdown .lbl {
                 margin-top: 6px;
-                font-size: .75rem;
+                font-size: .6875rem;
                 letter-spacing: .14em;
                 text-transform: uppercase;
                 color: var(--ink-soft);
             }
 
-        /* ---------- lokasi ---------- */
+        /* ---------- lokasi: the map takes whatever room is left ---------- */
+        .page-fill .page-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            justify-content: flex-start;
+        }
+
         .venue {
-            margin-bottom: 26px;
+            flex: none;
+            margin-bottom: var(--gap);
             text-align: center;
         }
 
         .venue-name {
-            margin-top: 8px;
+            margin-top: 4px;
             font-family: var(--serif);
-            font-size: 1.875rem;
+            font-size: clamp(1.5rem, calc(var(--u) * 3.8), 1.875rem);
             font-weight: 500;
             line-height: 1.2;
         }
 
         .venue-address {
-            margin-top: 8px;
+            margin-top: 4px;
+            font-size: .875rem;
             color: var(--ink-soft);
         }
 
         .venue-when {
-            margin-top: 4px;
-            font-size: .9375rem;
+            margin-top: 2px;
+            font-size: .8125rem;
             color: var(--ink-soft);
         }
 
         .map-wrap {
+            flex: 1 1 auto;
+            min-height: 140px;
+            max-height: 360px;
             overflow: hidden;
-            aspect-ratio: 4 / 3;
             border: 1px solid var(--line);
             border-radius: var(--radius-lg);
             background: var(--blush-soft);
@@ -1219,44 +1279,47 @@
                 border: 0;
             }
 
-        @media (min-width: 600px) {
-            .map-wrap {
-                aspect-ratio: 16 / 10;
-            }
-        }
-
         .note {
-            margin-top: 12px;
+            flex: none;
+            margin: 8px 0 var(--gap);
             text-align: center;
-            font-size: .8125rem;
-            line-height: 1.55;
+            font-size: .75rem;
+            line-height: 1.45;
             color: var(--ink-soft);
         }
 
-        /* ---------- ucapan ---------- */
+        /* ---------- ucapan: the list scrolls inside its own box ---------- */
         .wish-tools {
+            flex: none;
             display: flex;
-            justify-content: center;
-            margin: -8px 0 18px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
-        .wish-list {
-            display: grid;
-            gap: 12px;
-        }
-
-            .wish-list.is-collapsed .wish-item:nth-child(n+7) {
-                display: none;
+            .wish-tools .lede {
+                margin: 0;
+                text-align: left;
             }
 
-        .wish-more {
+        .wish-list {
+            flex: 1 1 auto;
+            min-height: 120px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
             display: flex;
-            justify-content: center;
-            margin-top: 18px;
+            flex-direction: column;
+            gap: 10px;
+            padding: 2px 2px 18px;
+            border-radius: var(--radius);
+            -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
+            mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
         }
 
         .wish-item {
-            padding: 18px 20px;
+            flex: none;
+            padding: 14px 16px;
             text-align: left;
             background: var(--paper);
             border: 1px solid var(--line);
@@ -1268,23 +1331,23 @@
                 flex-wrap: wrap;
                 align-items: center;
                 gap: 2px 0;
-                font-size: .9375rem;
+                font-size: .875rem;
                 font-weight: 500;
                 color: var(--rose-deep);
             }
 
             .wish-item .msg {
-                margin-top: 6px;
+                margin-top: 4px;
                 font-family: var(--serif);
-                font-size: 1.1875rem;
-                line-height: 1.5;
+                font-size: 1.125rem;
+                line-height: 1.45;
                 white-space: pre-wrap;
                 word-break: break-word;
             }
 
             .wish-item .when {
-                margin-top: 8px;
-                font-size: .8125rem;
+                margin-top: 6px;
+                font-size: .75rem;
                 color: var(--ink-soft);
             }
 
@@ -1325,13 +1388,14 @@
 
         .owner-banner {
             display: none;
-            margin: 0 0 16px;
-            padding: 10px 14px;
+            flex: none;
+            margin: 0 0 10px;
+            padding: 8px 12px;
             border: 1px dashed var(--gold);
             border-radius: 12px;
             background: #fff8ec;
             color: var(--gold-deep);
-            font-size: .875rem;
+            font-size: .8125rem;
             text-align: center;
         }
 
@@ -1340,7 +1404,7 @@
         }
 
         .empty-state {
-            padding: 24px 0;
+            padding: 20px 0;
             text-align: center;
             font-size: .9375rem;
             color: var(--ink-soft);
@@ -1349,7 +1413,7 @@
         /* ---------- hubungi ---------- */
         .contacts {
             display: grid;
-            gap: 16px;
+            gap: var(--gap);
             margin: 0;
             padding: 0;
             list-style: none;
@@ -1359,16 +1423,16 @@
             display: grid;
             grid-template-columns: auto 1fr;
             align-items: center;
-            gap: 16px;
-            padding: 20px;
+            gap: 12px 14px;
+            padding: clamp(14px, calc(var(--u) * 2.4), 20px) 16px;
             background: var(--paper);
             border: 1px solid var(--line);
             border-radius: var(--radius-lg);
         }
 
         .avatar {
-            width: 52px;
-            height: 52px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: grid;
             place-items: center;
@@ -1376,7 +1440,7 @@
             background: var(--gold-wash);
             color: var(--gold-deep);
             font-family: var(--serif);
-            font-size: 1.5rem;
+            font-size: 1.375rem;
         }
 
             .avatar.bride {
@@ -1386,105 +1450,52 @@
             }
 
         .contact-card .name {
-            font-size: 1.0625rem;
+            font-size: 1rem;
             font-weight: 500;
             line-height: 1.35;
         }
 
         .contact-card .role {
             margin-top: 2px;
-            font-size: .875rem;
+            font-size: .8125rem;
             color: var(--ink-soft);
         }
 
         .contact-actions {
             grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
         }
 
-            .contact-actions .btn {
-                min-height: 48px;
-                padding: 10px 14px;
-            }
-
-        /* ---------- footer ---------- */
-        .site-footer {
-            padding: 64px 16px calc(var(--nav-h) + 56px + env(safe-area-inset-bottom));
+        .sign-off {
+            margin-top: calc(var(--gap) * 1.6);
             text-align: center;
-            border-top: 1px solid var(--line);
-            color: var(--ink-soft);
         }
 
-        @media (min-width: 760px) {
-            .site-footer {
-                padding-bottom: 96px;
-            }
-        }
-
-            .site-footer img {
-                width: 44px;
+            .sign-off img {
+                width: 36px;
                 height: auto;
-                margin: 0 auto 12px;
+                margin: 0 auto 6px;
             }
 
-            .site-footer .names {
+            .sign-off .names {
                 font-family: var(--script);
-                font-size: 2.25rem;
-                line-height: 1.3;
+                font-size: 2rem;
+                line-height: 1.2;
                 color: var(--rose-deep);
-            }
-
-            .site-footer .when {
-                margin-top: 2px;
-                font-size: .9375rem;
-            }
-
-        /* ---------- music toggle ---------- */
-        .music-toggle {
-            position: fixed;
-            right: max(16px, env(safe-area-inset-right));
-            bottom: calc(16px + env(safe-area-inset-bottom));
-            z-index: 60;
-            width: 48px;
-            height: 48px;
-            padding: 0;
-            border-radius: 50%;
-            border: 1px solid rgba(127, 98, 54, .45);
-            background: rgba(255, 253, 252, .94);
-            -webkit-backdrop-filter: blur(6px);
-            backdrop-filter: blur(6px);
-            color: var(--gold-deep);
-            display: grid;
-            place-items: center;
-            box-shadow: 0 6px 18px rgba(120, 78, 90, .14);
-            cursor: pointer;
-            transition: border-color .2s var(--ease), background-color .2s var(--ease), transform .35s var(--ease);
-        }
-
-            .music-toggle:hover {
-                border-color: var(--gold-deep);
-                background: var(--paper);
-            }
-
-            .music-toggle svg {
-                width: 20px;
-                height: 20px;
             }
 
         /* ---------- toast ---------- */
         .toast {
-            position: fixed;
+            position: absolute;
             left: 50%;
-            bottom: calc(var(--nav-h) + 28px + env(safe-area-inset-bottom));
+            bottom: calc(var(--nav-h) + 18px + env(safe-area-inset-bottom));
             z-index: 120;
+            width: max-content;
             max-width: calc(100% - 32px);
-            padding: 12px 20px;
+            padding: 11px 20px;
             border-radius: 999px;
             background: var(--ink);
             color: #fff;
-            font-size: .9375rem;
+            font-size: .875rem;
             text-align: center;
             box-shadow: 0 10px 30px rgba(74, 58, 58, .2);
             opacity: 0;
@@ -1498,27 +1509,14 @@
                 transform: translate(-50%, 0);
             }
 
-        /* phones: lift the floating bits above the bottom nav once it shows */
-        @media (max-width: 759px) {
-            body.past-hero .music-toggle {
-                transform: translateY(calc(-1 * var(--nav-h)));
-            }
-        }
-
-        @media (min-width: 760px) {
-            .toast {
-                bottom: 88px;
-            }
-        }
-
         /* ---------- owner dashboard (opened by the secret code) ---------- */
         .sheet {
-            position: fixed;
+            position: absolute;
             inset: 0;
             z-index: 100;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 0 16px calc(56px + env(safe-area-inset-bottom));
+            padding: 0 16px calc(40px + env(safe-area-inset-bottom));
             background: var(--page);
             transform: translateY(100%);
             visibility: hidden;
@@ -1531,9 +1529,8 @@
                 transition: transform .4s var(--ease), visibility 0s;
             }
 
-        .sheet-inner {
-            max-width: 40rem;
-            margin: 0 auto;
+        html:not(.js) .sheet {
+            display: none;
         }
 
         .sheet-topbar {
@@ -1543,7 +1540,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: calc(12px + env(safe-area-inset-top)) 0 12px;
+            padding: calc(10px + env(safe-area-inset-top)) 0 10px;
             background: linear-gradient(var(--page) 70%, rgba(255, 250, 249, 0));
         }
 
@@ -1553,6 +1550,16 @@
             letter-spacing: .2em;
             text-transform: uppercase;
         }
+
+        .sheet-head {
+            margin: 4px 0 16px;
+            text-align: center;
+        }
+
+            .sheet-head h2 {
+                margin-top: 4px;
+                font-size: 2rem;
+            }
 
         .stat-grid {
             display: grid;
@@ -1566,7 +1573,7 @@
             }
 
         .stat-box {
-            padding: 16px 8px;
+            padding: 14px 8px;
             text-align: center;
             background: var(--paper);
             border: 1px solid var(--line);
@@ -1584,7 +1591,7 @@
 
             .stat-box .lbl {
                 margin-top: 8px;
-                font-size: .75rem;
+                font-size: .6875rem;
                 letter-spacing: .1em;
                 text-transform: uppercase;
                 color: var(--ink-soft);
@@ -1602,7 +1609,7 @@
         .owner-note {
             margin: 6px 0 4px;
             text-align: center;
-            font-size: .875rem;
+            font-size: .8125rem;
             color: var(--ink-soft);
         }
 
@@ -1618,7 +1625,7 @@
         .badge {
             padding: 4px 10px;
             border-radius: 20px;
-            font-size: .75rem;
+            font-size: .6875rem;
             letter-spacing: .06em;
             text-transform: uppercase;
             white-space: nowrap;
@@ -1638,8 +1645,78 @@
                 margin-left: 6px;
                 background: rgba(182, 144, 90, .2);
                 color: var(--gold-deep);
+                font-size: .625rem;
+            }
+
+        /* ---------- short screens: a little tighter so the form still fits ---------- */
+        @media (max-height: 680px) {
+            :root {
+                --gap: clamp(6px, calc(var(--u) * 1.3), 18px);
+            }
+
+            .page-head {
+                min-height: 44px;
+            }
+
+            .field textarea {
+                height: 48px;
+            }
+
+            .mine-chips {
+                margin-top: 6px;
+            }
+
+            .mine-chip {
+                min-height: 32px;
+                padding: 4px 12px;
+            }
+
+            .update-banner {
+                padding: 6px 10px;
+            }
+        }
+
+        /* ---------- very short screens (small phones with browser bars) ---------- */
+        @media (max-height: 600px) {
+            .page-head {
+                min-height: 44px;
+            }
+
+            .page-rsvp .lede {
+                display: none;
+            }
+
+            .disclaimer {
+                margin-top: 6px;
                 font-size: .6875rem;
             }
+
+            .field-error {
+                margin-top: 4px;
+            }
+
+            .confirm {
+                padding: 14px 16px;
+            }
+
+            .confirm-note {
+                margin-top: 6px;
+            }
+
+            .confirm-icon {
+                width: 44px;
+                height: 44px;
+                margin-bottom: 8px;
+            }
+
+            .confirm-title {
+                font-size: 1.5rem;
+            }
+
+            .confirm-actions {
+                margin-top: 12px;
+            }
+        }
 
         /* ---------- reduced motion: keep it still ---------- */
         @media (prefers-reduced-motion: reduce) {
@@ -1649,309 +1726,304 @@
                 transition-duration: .01ms !important;
                 transition-delay: 0s !important;
             }
-
-            .js .reveal {
-                opacity: 1;
-                transform: none;
-            }
         }
     </style>
 </head>
 <body>
-    <a class="skip-link" href="#rsvp">Terus ke borang RSVP</a>
+    <div class="app" id="app" data-page="utama">
+        <a class="skip-link" href="#rsvp">Terus ke borang RSVP</a>
 
-    <!-- ============ BACKGROUND MUSIC ============
-         Put your song file in the SAME FOLDER as this file
-         and make sure the name below matches it exactly.
-         It starts muted because every mobile browser blocks audible
-         autoplay; the script below unmutes it at the earliest moment
-         the browser allows (see AUTOPLAY section). -->
-    <audio id="bgm" src="lagukahwin.mp3" loop preload="auto" autoplay muted playsinline webkit-playsinline></audio>
-    <button type="button" class="music-toggle" id="musicToggle" onclick="toggleMusic()" aria-label="Muzik latar" aria-pressed="false">
-        <svg id="musicIconOn" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:none"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.6" /><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.6" /></svg>
-        <svg id="musicIconOff" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.6" /><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.6" /><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
-    </button>
+        <!-- ============ BACKGROUND MUSIC ============
+             Put your song file in the SAME FOLDER as this file
+             and make sure the name below matches it exactly.
+             It starts muted because every mobile browser blocks audible
+             autoplay; the script below unmutes it at the earliest moment
+             the browser allows (see AUTOPLAY section). -->
+        <audio id="bgm" src="lagukahwin.mp3" loop preload="auto" autoplay muted playsinline webkit-playsinline></audio>
+        <button type="button" class="music-toggle" id="musicToggle" onclick="toggleMusic()" aria-label="Muzik latar" aria-pressed="false">
+            <svg id="musicIconOn" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:none"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.6" /><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.6" /></svg>
+            <svg id="musicIconOff" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.6" /><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.6" /><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+        </button>
 
-    <!-- desktop / tablet header -->
-    <header class="site-header" id="siteHeader">
-        <div class="header-inner">
-            <a class="brand" href="#top">
-                <img src="favicon.png" alt="" width="28" height="29">
-                <span>Umar &amp; Masyitah</span>
-            </a>
-            <nav class="header-nav" aria-label="Bahagian halaman">
-                <a href="#kalendar">Kalendar</a>
-                <a href="#lokasi">Lokasi</a>
-                <a href="#ucapan">Ucapan</a>
-                <a href="#hubungi">Hubungi</a>
-            </nav>
-            <a class="header-rsvp" href="#rsvp">RSVP</a>
-        </div>
-    </header>
+        <main class="pages">
+            <!-- ============ COVER ============ -->
+            <section class="page page-cover is-active" id="utama" data-title="Utama" aria-labelledby="heroTitle">
+                <div class="hero-frame">
+                    <img class="hero-mono" src="favicon.png" alt="Monogram U &amp; M" width="64" height="67">
+                    <p class="eyebrow">Jemputan Perkahwinan</p>
+                    <h1 class="hero-names" id="heroTitle" tabindex="-1">
+                        <span>Umar</span>
+                        <span class="amp">&amp;</span>
+                        <span>Masyitah</span>
+                    </h1>
+                    <div class="ornament" aria-hidden="true"><span></span></div>
+                    <p class="hero-date"><time datetime="2026-12-19">Sabtu, 19 Disember 2026</time></p>
+                    <p class="hero-hijri">9 Rejab 1448H</p>
+                    <p class="hero-meta">
+                        <time datetime="2026-12-19T11:00+08:00">11.00 AM</time> &ndash; <time datetime="2026-12-19T16:00+08:00">4.00 PM</time><br>
+                        CMi Prestige Hall Tanah Putih, Kuantan
+                    </p>
+                    <a class="btn btn-primary btn-caps hero-cta" href="#rsvp">Sahkan Kehadiran</a>
+                </div>
+            </section>
 
-    <main>
-        <!-- ============ COVER ============ -->
-        <section class="hero" id="top" aria-labelledby="heroTitle">
-            <div class="hero-frame">
-                <img class="hero-mono" src="favicon.png" alt="Monogram U &amp; M" width="64" height="67">
-                <p class="eyebrow">Jemputan Perkahwinan</p>
-                <h1 class="hero-names" id="heroTitle">
-                    <span>Umar</span>
-                    <span class="amp">&amp;</span>
-                    <span>Masyitah</span>
-                </h1>
-                <div class="ornament" aria-hidden="true"><span></span></div>
-                <p class="hero-date"><time datetime="2026-12-19">Sabtu, 19 Disember 2026</time></p>
-                <p class="hero-hijri">9 Rejab 1448H</p>
-                <p class="hero-meta">
-                    <time datetime="2026-12-19T11:00+08:00">11.00 AM</time> &ndash; <time datetime="2026-12-19T16:00+08:00">4.00 PM</time><br>
-                    CMi Prestige Hall Tanah Putih, Kuantan
-                </p>
-                <a class="btn btn-primary btn-caps hero-cta" href="#rsvp">Sahkan Kehadiran</a>
-            </div>
-        </section>
+            <!-- ============ RSVP ============ -->
+            <section class="page page-rsvp" id="rsvp" data-title="Kehadiran" aria-labelledby="rsvpTitle">
+                <header class="page-head">
+                    <a class="home-btn" href="#utama" aria-label="Halaman utama"><img src="favicon.png" alt="" width="22" height="23"></a>
+                    <div>
+                        <p class="eyebrow">RSVP</p>
+                        <h2 id="rsvpTitle" tabindex="-1">Kehadiran</h2>
+                    </div>
+                </header>
 
-        <!-- ============ RSVP ============ -->
-        <section class="section" id="rsvp" aria-labelledby="rsvpTitle">
-            <div class="container reveal">
-                <header class="section-head">
-                    <p class="eyebrow">RSVP</p>
-                    <h2 id="rsvpTitle">Kehadiran</h2>
+                <div class="page-body" id="rsvpBody">
                     <p class="lede">Sila sahkan kehadiran anda ke majlis perkahwinan kami.</p>
-                </header>
 
-                <div class="card">
-                    <div class="update-banner" id="updateBanner">
-                        <p id="mineNote">You have already submitted an RSVP from this device. The form below has been pre-filled &mdash; edit and resubmit it to update your RSVP.</p>
-                        <div class="mine-chips" id="mineChips"></div>
-                    </div>
-                    <p class="slot-note" id="slotNote"></p>
-
-                    <noscript><p class="form-status">Sila aktifkan JavaScript untuk menghantar RSVP.</p></noscript>
-
-                    <form id="attendForm" novalidate>
-                        <div class="field">
-                            <label for="atName">Nama Penuh</label>
-                            <input type="text" id="atName" name="name" required autocomplete="name" placeholder="Nama anda" aria-describedby="atNameError">
-                            <p class="field-error" id="atNameError" hidden></p>
+                    <div class="card" id="rsvpCard">
+                        <div class="update-banner" id="updateBanner">
+                            <p><span id="mineNote">You have already submitted an RSVP from this device. The form below has been pre-filled &mdash; edit and resubmit it to update your RSVP.</span> <span class="slot-note" id="slotNote"></span></p>
+                            <div class="mine-chips" id="mineChips"></div>
                         </div>
 
-                        <fieldset class="field">
-                            <legend>Kehadiran</legend>
-                            <div class="radio-row">
-                                <label class="radio-opt selected" id="optHadir"><input type="radio" name="status" value="Hadir" checked><span>Hadir</span></label>
-                                <label class="radio-opt" id="optTidak"><input type="radio" name="status" value="Tidak Hadir"><span>Tidak Hadir</span></label>
+                        <noscript><p class="form-status">Sila aktifkan JavaScript untuk menghantar RSVP.</p></noscript>
+
+                        <form id="attendForm" novalidate>
+                            <div class="field">
+                                <label for="atName">Nama Penuh</label>
+                                <input type="text" id="atName" name="name" required autocomplete="name" placeholder="Nama anda" aria-describedby="atNameError">
+                                <p class="field-error" id="atNameError" hidden></p>
                             </div>
-                        </fieldset>
 
-                        <div class="field" id="paxField">
-                            <label for="atPax">Bilangan Kehadiran</label>
-                            <div class="stepper">
-                                <button type="button" class="step-btn" id="paxMinus" onclick="stepPax(-1)" aria-label="Kurangkan bilangan" aria-controls="atPax">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
-                                </button>
-                                <input type="number" id="atPax" min="1" max="10" value="1" inputmode="numeric" aria-describedby="paxHint">
-                                <button type="button" class="step-btn" id="paxPlus" onclick="stepPax(1)" aria-label="Tambah bilangan" aria-controls="atPax">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-                                </button>
+                            <fieldset class="field">
+                                <legend class="sr-only">Kehadiran</legend>
+                                <div class="radio-row">
+                                    <label class="radio-opt selected" id="optHadir"><input type="radio" name="status" value="Hadir" checked><span>Hadir</span></label>
+                                    <label class="radio-opt" id="optTidak"><input type="radio" name="status" value="Tidak Hadir"><span>Tidak Hadir</span></label>
+                                </div>
+                            </fieldset>
+
+                            <div class="field" id="paxField">
+                                <div class="pax-row">
+                                    <div class="pax-text">
+                                        <label for="atPax">Bilangan Kehadiran</label>
+                                        <p class="step-hint" id="paxHint" aria-live="polite">Seorang sahaja</p>
+                                    </div>
+                                    <div class="stepper">
+                                        <button type="button" class="step-btn" id="paxMinus" onclick="stepPax(-1)" aria-label="Kurangkan bilangan" aria-controls="atPax">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+                                        </button>
+                                        <input type="number" id="atPax" min="1" max="10" value="1" inputmode="numeric" aria-describedby="paxHint">
+                                        <button type="button" class="step-btn" id="paxPlus" onclick="stepPax(1)" aria-label="Tambah bilangan" aria-controls="atPax">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <p class="step-hint" id="paxHint" aria-live="polite">Seorang sahaja</p>
-                        </div>
 
-                        <div class="field">
-                            <label for="atWish">Ucapan &amp; Doa <span class="optional">(optional)</span></label>
-                            <textarea id="atWish" maxlength="500" rows="4" placeholder="Tulis ucapan dan doa restu anda di sini..." aria-describedby="wishCount"></textarea>
-                            <p class="charcount" id="wishCount">0 / 500</p>
-                        </div>
+                            <div class="field">
+                                <div class="label-row">
+                                    <label for="atWish">Ucapan &amp; Doa <span class="optional">(optional)</span></label>
+                                    <span class="charcount" id="wishCount">0 / 500</span>
+                                </div>
+                                <textarea id="atWish" maxlength="500" rows="2" placeholder="Tulis ucapan dan doa restu anda di sini..." aria-describedby="wishCount"></textarea>
+                            </div>
 
-                        <p class="form-status" id="formStatus" role="alert"></p>
+                            <p class="form-status" id="formStatus" role="alert"></p>
 
-                        <button type="submit" class="btn btn-primary btn-caps btn-block" id="atSubmitBtn">Hantar Pengesahan</button>
-                    </form>
-                    <p class="disclaimer">Anda boleh menghantar semula dari peranti yang sama untuk mengemaskini rekod anda. Terima kasih atas kerjasama anda.</p>
+                            <button type="submit" class="btn btn-primary btn-caps btn-block" id="atSubmitBtn">Hantar Pengesahan</button>
+                        </form>
+                        <p class="disclaimer">Anda boleh menghantar semula dari peranti yang sama untuk mengemaskini rekod anda. Terima kasih atas kerjasama anda.</p>
+                    </div>
+
+                    <div id="atResult" hidden></div>
                 </div>
+            </section>
 
-                <div id="atResult" aria-live="polite"></div>
-            </div>
-        </section>
-
-        <!-- ============ KALENDAR (date, countdown, save to calendar) ============ -->
-        <section class="section section-tint" id="kalendar" aria-labelledby="kalendarTitle">
-            <div class="container reveal">
-                <header class="section-head">
-                    <p class="eyebrow">Tarikh &amp; Masa</p>
-                    <h2 id="kalendarTitle">Save the Date <span class="heart" aria-hidden="true">&#10084;&#xFE0E;</span></h2>
+            <!-- ============ KALENDAR ============ -->
+            <section class="page" id="kalendar" data-title="Kalendar" aria-labelledby="kalendarTitle">
+                <header class="page-head">
+                    <a class="home-btn" href="#utama" aria-label="Halaman utama"><img src="favicon.png" alt="" width="22" height="23"></a>
+                    <div>
+                        <p class="eyebrow">Tarikh &amp; Masa</p>
+                        <h2 id="kalendarTitle" tabindex="-1">Save the Date <span class="heart" aria-hidden="true">&#10084;&#xFE0E;</span></h2>
+                    </div>
                 </header>
 
-                <div class="date-block">
-                    <p class="date-main">Sabtu <span class="pipe" aria-hidden="true">|</span> 19 Disember 2026</p>
-                    <p class="date-hijri">9 Rejab 1448H</p>
-                    <p class="date-time">11.00 AM &ndash; 4.00 PM</p>
-                </div>
+                <div class="page-body">
+                    <div class="date-block">
+                        <p class="date-main">Sabtu <span class="pipe" aria-hidden="true">|</span> 19 Disember 2026</p>
+                        <p class="date-hijri">9 Rejab 1448H</p>
+                        <p class="date-time">11.00 AM &ndash; 4.00 PM</p>
+                    </div>
 
-                <div class="countdown-wrap">
-                    <h3 class="mini-title">Menuju Hari Bahagia</h3>
-                    <div class="countdown" role="timer" aria-label="Kiraan detik ke hari majlis">
-                        <div class="box"><div class="num" id="cd-days">00</div><div class="lbl">Hari</div></div>
-                        <div class="box"><div class="num" id="cd-hours">00</div><div class="lbl">Jam</div></div>
-                        <div class="box"><div class="num" id="cd-mins">00</div><div class="lbl">Minit</div></div>
-                        <div class="box"><div class="num" id="cd-secs">00</div><div class="lbl">Saat</div></div>
+                    <div class="countdown-wrap">
+                        <h3 class="mini-title">Menuju Hari Bahagia</h3>
+                        <div class="countdown" role="timer" aria-label="Kiraan detik ke hari majlis">
+                            <div class="box"><div class="num" id="cd-days">00</div><div class="lbl">Hari</div></div>
+                            <div class="box"><div class="num" id="cd-hours">00</div><div class="lbl">Jam</div></div>
+                            <div class="box"><div class="num" id="cd-mins">00</div><div class="lbl">Minit</div></div>
+                            <div class="box"><div class="num" id="cd-secs">00</div><div class="lbl">Saat</div></div>
+                        </div>
+                    </div>
+
+                    <div class="btn-stack">
+                        <button type="button" class="btn btn-outline" onclick="downloadICS()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+                            Simpan ke Kalendar Apple / .ics
+                        </button>
+                        <a class="btn btn-outline" id="gcalBtn" href="#" target="_blank" rel="noopener">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18" /></svg>
+                            Simpan ke Kalendar Google
+                        </a>
                     </div>
                 </div>
+            </section>
 
-                <div class="btn-row">
-                    <button type="button" class="btn btn-outline" onclick="downloadICS()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
-                        Simpan ke Kalendar Apple / .ics
-                    </button>
-                    <a class="btn btn-outline" id="gcalBtn" href="#" target="_blank" rel="noopener">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18" /></svg>
-                        Simpan ke Kalendar Google
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <!-- ============ LOKASI ============ -->
-        <section class="section" id="lokasi" aria-labelledby="lokasiTitle">
-            <div class="container reveal">
-                <header class="section-head">
-                    <p class="eyebrow">Sila Hadir Ke</p>
-                    <h2 id="lokasiTitle">Lokasi Majlis</h2>
+            <!-- ============ LOKASI ============ -->
+            <section class="page page-fill" id="lokasi" data-title="Lokasi" aria-labelledby="lokasiTitle">
+                <header class="page-head">
+                    <a class="home-btn" href="#utama" aria-label="Halaman utama"><img src="favicon.png" alt="" width="22" height="23"></a>
+                    <div>
+                        <p class="eyebrow">Sila Hadir Ke</p>
+                        <h2 id="lokasiTitle" tabindex="-1">Lokasi Majlis</h2>
+                    </div>
                 </header>
 
-                <div class="venue">
-                    <h3 class="mini-title">Dewan Majlis</h3>
-                    <p class="venue-name">CMi Prestige Hall</p>
-                    <p class="venue-address" id="venueAddress">Tanah Putih, Lot 16606, Batu 3, Industrial Area, 25150 Kuantan, Pahang</p>
-                    <p class="venue-when">Sabtu, 19 Disember 2026 · 11.00 AM – 4.00 PM</p>
-                </div>
+                <div class="page-body">
+                    <div class="venue">
+                        <h3 class="mini-title">Dewan Majlis</h3>
+                        <p class="venue-name">CMi Prestige Hall</p>
+                        <p class="venue-address" id="venueAddress">Tanah Putih, Lot 16606, Batu 3, Industrial Area, 25150 Kuantan, Pahang</p>
+                        <p class="venue-when">Sabtu, 19 Disember 2026 · 11.00 AM – 4.00 PM</p>
+                    </div>
 
-                <div class="map-wrap">
-                    <iframe id="mapFrame" title="Peta lokasi CMi Prestige Hall Tanah Putih" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src=""></iframe>
-                </div>
-                <p class="note">Alamat di atas berdasarkan carian "CMi Prestige Hall Tanah Putih". Sila semak semula pautan Google Maps sebenar jika ada perbezaan tingkat/unit.</p>
+                    <div class="map-wrap">
+                        <iframe id="mapFrame" title="Peta lokasi CMi Prestige Hall Tanah Putih" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src=""></iframe>
+                    </div>
+                    <p class="note">Alamat di atas berdasarkan carian "CMi Prestige Hall Tanah Putih". Sila semak semula pautan Google Maps sebenar jika ada perbezaan tingkat/unit.</p>
 
-                <div class="btn-row">
-                    <a class="btn btn-primary" id="gmapsBtn" href="#" target="_blank" rel="noopener">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12Z" /><circle cx="12" cy="9" r="2.4" /></svg>
-                        Lihat Lokasi Menggunakan Google Maps
-                    </a>
-                    <a class="btn btn-outline" id="wazeBtn" href="#" target="_blank" rel="noopener">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 12a8 8 0 1 1 8 8" /><path d="M4 12l3-3M4 12l3 3" /></svg>
-                        Lihat Lokasi Menggunakan Waze
-                    </a>
+                    <div class="btn-pair">
+                        <a class="btn btn-primary" id="gmapsBtn" href="#" target="_blank" rel="noopener" aria-label="Lihat Lokasi Menggunakan Google Maps">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12Z" /><circle cx="12" cy="9" r="2.4" /></svg>
+                            Google Maps
+                        </a>
+                        <a class="btn btn-outline" id="wazeBtn" href="#" target="_blank" rel="noopener" aria-label="Lihat Lokasi Menggunakan Waze">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 12a8 8 0 1 1 8 8" /><path d="M4 12l3-3M4 12l3 3" /></svg>
+                            Waze
+                        </a>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- ============ UCAPAN (public guestbook) ============ -->
-        <section class="section section-tint" id="ucapan" aria-labelledby="ucapanTitle">
-            <div class="container reveal">
-                <header class="section-head">
-                    <p class="eyebrow">Doa &amp; Ucapan</p>
-                    <h2 id="ucapanTitle">Ucapan</h2>
-                    <p class="lede">Ucapan tulus ikhlas daripada para tetamu.</p>
+            <!-- ============ UCAPAN (public guestbook) ============ -->
+            <section class="page page-fill" id="ucapan" data-title="Ucapan" aria-labelledby="ucapanTitle">
+                <header class="page-head">
+                    <a class="home-btn" href="#utama" aria-label="Halaman utama"><img src="favicon.png" alt="" width="22" height="23"></a>
+                    <div>
+                        <p class="eyebrow">Doa &amp; Ucapan</p>
+                        <h2 id="ucapanTitle" tabindex="-1">Ucapan</h2>
+                    </div>
                 </header>
 
-                <div class="owner-banner">Admin: &mdash; press &times; to delete wishes.</div>
-                <div class="wish-tools">
-                    <button type="button" class="btn-text" onclick="loadWishes(true)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6" /><path d="M20 4v5h-5" /></svg>
-                        Muat semula
-                    </button>
+                <div class="page-body">
+                    <div class="owner-banner">Admin: &mdash; press &times; to delete wishes.</div>
+                    <div class="wish-tools">
+                        <p class="lede">Ucapan tulus ikhlas daripada para tetamu.</p>
+                        <button type="button" class="btn-text" onclick="loadWishes(true)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6" /><path d="M20 4v5h-5" /></svg>
+                            Muat semula
+                        </button>
+                    </div>
+                    <div id="wishList" class="wish-list" tabindex="0" role="region" aria-label="Senarai ucapan"></div>
                 </div>
-                <div id="wishList" class="wish-list"></div>
-                <div class="wish-more">
-                    <button type="button" class="btn btn-outline" id="wishMore" aria-controls="wishList" aria-expanded="false" hidden></button>
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- ============ HUBUNGI ============ -->
-        <section class="section" id="hubungi" aria-labelledby="hubungiTitle">
-            <div class="container reveal">
-                <header class="section-head">
-                    <p class="eyebrow">Sebarang Pertanyaan</p>
-                    <h2 id="hubungiTitle">Hubungi Kami</h2>
+            <!-- ============ HUBUNGI ============ -->
+            <section class="page" id="hubungi" data-title="Hubungi" aria-labelledby="hubungiTitle">
+                <header class="page-head">
+                    <a class="home-btn" href="#utama" aria-label="Halaman utama"><img src="favicon.png" alt="" width="22" height="23"></a>
+                    <div>
+                        <p class="eyebrow">Sebarang Pertanyaan</p>
+                        <h2 id="hubungiTitle" tabindex="-1">Hubungi Kami</h2>
+                    </div>
                 </header>
 
-                <ul class="contacts">
-                    <li class="contact-card">
-                        <div class="avatar" aria-hidden="true">U</div>
-                        <div>
-                            <p class="name">Abu Bakar bin Hj Azman</p>
-                            <p class="role">Groom's Side (Umar Ariff)</p>
-                        </div>
-                        <div class="contact-actions">
-                            <a class="btn btn-outline" href="https://wa.me/60133181957" target="_blank" rel="noopener" aria-label="WhatsApp Abu Bakar bin Hj Azman">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19L4 20Z" /></svg>
-                                WhatsApp
-                            </a>
-                            <a class="btn btn-outline" href="tel:+60133181957" aria-label="Panggil Abu Bakar bin Hj Azman">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" /></svg>
-                                Panggil
-                            </a>
-                        </div>
-                    </li>
+                <div class="page-body">
+                    <ul class="contacts">
+                        <li class="contact-card">
+                            <div class="avatar" aria-hidden="true">U</div>
+                            <div>
+                                <p class="name">Abu Bakar bin Hj Azman</p>
+                                <p class="role">Groom's Side (Umar Ariff)</p>
+                            </div>
+                            <div class="contact-actions btn-pair">
+                                <a class="btn btn-outline" href="https://wa.me/60133181957" target="_blank" rel="noopener" aria-label="WhatsApp Abu Bakar bin Hj Azman">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19L4 20Z" /></svg>
+                                    WhatsApp
+                                </a>
+                                <a class="btn btn-outline" href="tel:+60133181957" aria-label="Panggil Abu Bakar bin Hj Azman">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" /></svg>
+                                    Panggil
+                                </a>
+                            </div>
+                        </li>
 
-                    <li class="contact-card">
-                        <div class="avatar bride" aria-hidden="true">M</div>
-                        <div>
-                            <p class="name">Abbas bin Hasanuddin</p>
-                            <p class="role">Bride's Side (Masyitah)</p>
-                        </div>
-                        <div class="contact-actions">
-                            <a class="btn btn-outline" href="https://wa.me/60139911973" target="_blank" rel="noopener" aria-label="WhatsApp Abbas bin Hasanuddin">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19L4 20Z" /></svg>
-                                WhatsApp
-                            </a>
-                            <a class="btn btn-outline" href="tel:+60139911973" aria-label="Panggil Abbas bin Hasanuddin">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" /></svg>
-                                Panggil
-                            </a>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </section>
-    </main>
+                        <li class="contact-card">
+                            <div class="avatar bride" aria-hidden="true">M</div>
+                            <div>
+                                <p class="name">Abbas bin Hasanuddin</p>
+                                <p class="role">Bride's Side (Masyitah)</p>
+                            </div>
+                            <div class="contact-actions btn-pair">
+                                <a class="btn btn-outline" href="https://wa.me/60139911973" target="_blank" rel="noopener" aria-label="WhatsApp Abbas bin Hasanuddin">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19L4 20Z" /></svg>
+                                    WhatsApp
+                                </a>
+                                <a class="btn btn-outline" href="tel:+60139911973" aria-label="Panggil Abbas bin Hasanuddin">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" /></svg>
+                                    Panggil
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
 
-    <footer class="site-footer">
-        <img src="favicon.png" alt="" width="44" height="46">
-        <p class="names">Umar &amp; Masyitah</p>
-        <p class="when">Sabtu, 19 Disember 2026</p>
-    </footer>
+                    <div class="sign-off">
+                        <img src="favicon.png" alt="" width="36" height="38">
+                        <p class="names">Umar &amp; Masyitah</p>
+                    </div>
+                </div>
+            </section>
+        </main>
 
-    <!-- ============ MOBILE BOTTOM NAV ============ -->
-    <nav class="bottom-nav" id="bottomNav" aria-label="Navigasi">
-        <a class="nav-item" href="#kalendar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
-            Kalendar
-        </a>
-        <a class="nav-item" href="#lokasi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12Z" /><circle cx="12" cy="9" r="2.4" /></svg>
-            Lokasi
-        </a>
-        <a class="nav-item nav-rsvp" href="#rsvp">
-            <span class="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg></span>
-            RSVP
-        </a>
-        <a class="nav-item" href="#ucapan">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.8 8.6c0 5-8.8 10.4-8.8 10.4S3.2 13.6 3.2 8.6a4.8 4.8 0 0 1 8.8-2.7 4.8 4.8 0 0 1 8.8 2.7Z" /></svg>
-            Ucapan
-        </a>
-        <a class="nav-item" href="#hubungi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" /></svg>
-            Hubungi
-        </a>
-    </nav>
+        <!-- ============ BOTTOM NAV ============ -->
+        <nav class="bottom-nav" id="bottomNav" aria-label="Navigasi">
+            <a class="nav-item" href="#kalendar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+                Kalendar
+            </a>
+            <a class="nav-item" href="#lokasi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12Z" /><circle cx="12" cy="9" r="2.4" /></svg>
+                Lokasi
+            </a>
+            <a class="nav-item nav-rsvp" href="#rsvp">
+                <span class="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg></span>
+                RSVP
+            </a>
+            <a class="nav-item" href="#ucapan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.8 8.6c0 5-8.8 10.4-8.8 10.4S3.2 13.6 3.2 8.6a4.8 4.8 0 0 1 8.8-2.7 4.8 4.8 0 0 1 8.8 2.7Z" /></svg>
+                Ucapan
+            </a>
+            <a class="nav-item" href="#hubungi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" /></svg>
+                Hubungi
+            </a>
+        </nav>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <!-- ============ OWNER DASHBOARD (opened by the secret code, no nav button) ============ -->
-    <section class="sheet" id="sheet-owner" role="dialog" aria-modal="true" aria-labelledby="ownerTitle">
-        <div class="sheet-inner">
+        <!-- ============ OWNER DASHBOARD (opened by the secret code, no nav button) ============ -->
+        <section class="sheet" id="sheet-owner" role="dialog" aria-modal="true" aria-labelledby="ownerTitle">
             <div class="sheet-topbar">
                 <button type="button" class="icon-btn" onclick="closeSheets()" aria-label="Kembali">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
@@ -1961,7 +2033,7 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6" /><path d="M20 4v5h-5" /></svg>
                 </button>
             </div>
-            <header class="section-head">
+            <header class="sheet-head">
                 <p class="eyebrow">Owner</p>
                 <h2 id="ownerTitle">Kehadiran</h2>
             </header>
@@ -1969,17 +2041,17 @@
             <div class="stat-grid" id="ownerStats"></div>
             <p class="owner-note" id="ownerSync"></p>
 
-            <div class="btn-row" style="margin-top:16px;">
+            <div class="btn-stack" style="margin-top:14px;">
                 <a class="btn btn-outline" id="csvBtn" href="#" onclick="downloadRSVPCSV(); return false;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M4 19h16" /></svg>
                     Muat Turun Senarai (CSV)
                 </a>
             </div>
 
-            <h3 class="mini-title" style="text-align:center; margin:32px 0 14px;">Senarai Penuh</h3>
+            <h3 class="mini-title" style="text-align:center; margin:28px 0 12px;">Senarai Penuh</h3>
             <div id="ownerList" class="attend-list"></div>
-        </div>
-    </section>
+        </section>
+    </div>
 
     <script>
 /* =========================================================
@@ -2009,84 +2081,82 @@ const SUPABASE = {
   anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkbHl2dGRtemRmZHdub2FxbGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4MDQxNjYsImV4cCI6MjEwNTM4MDE2Nn0.NpWKaXe0vT6NolORzb_sUCVCVhF7wZ7gF6DwZ1gW_I8"
 };
 
-function reducedMotion(){
-  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-}
-
 /* =========================================================
-   CLICK SOUND — small synthesized "pop" on taps, no audio file needed
-   ========================================================= */
-let wmAudioCtx;
-function playClick(){
-  try{
-    wmAudioCtx = wmAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    if (wmAudioCtx.state === 'suspended') wmAudioCtx.resume();
-    const t = wmAudioCtx.currentTime;
-    const osc = wmAudioCtx.createOscillator();
-    const gain = wmAudioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(920, t);
-    osc.frequency.exponentialRampToValueAtTime(480, t + 0.09);
-    gain.gain.setValueAtTime(0.001, t);
-    gain.gain.exponentialRampToValueAtTime(0.22, t + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-    osc.connect(gain).connect(wmAudioCtx.destination);
-    osc.start(t);
-    osc.stop(t + 0.14);
-  }catch(e){}
-}
-document.addEventListener('click', function(e){
-  const el = e.target.closest('.btn, .btn-text, .icon-btn, .nav-item, .header-rsvp, .mine-chip, .radio-opt, button');
-  if (el) playClick();
-}, true);
-
-/* =========================================================
-   NAVIGATION + SECTION REVEALS
+   PAGES — one screen at a time
    ---------------------------------------------------------
-   The cover keeps one single call to action. Once most of it
-   has scrolled away, body gets .past-hero: that slides in the
-   bottom nav on phones (the header on bigger screens).
-   The nav link of the section in the middle of the screen is
-   marked as current, and sections fade up once as they appear.
-   Without IntersectionObserver everything is simply shown.
+   Every page has its own address (#rsvp, #lokasi, ...), so
+   links, the bottom nav and the phone's Back button all just
+   change the address and this shows the matching page.
+   The cover (#utama) keeps one single call to action; the
+   bottom nav appears on every other page.
    ========================================================= */
-(function initPageChrome(){
-  const hero    = document.querySelector('.hero');
-  const reveals = document.querySelectorAll('.reveal');
-  const links   = document.querySelectorAll('.nav-item, .header-nav a');
+const APP = document.getElementById('app');
+const PAGE_IDS = Array.from(document.querySelectorAll('.page'), p => p.id);
+const BASE_TITLE = document.title;
+let ACTIVE_PAGE = null;
 
-  if (!('IntersectionObserver' in window)){
-    document.body.classList.add('past-hero');
-    reveals.forEach(el => el.classList.add('is-visible'));
-    return;
+function pageFromHash(){
+  let id = '';
+  try{ id = decodeURIComponent(location.hash.slice(1)); }catch(e){}
+  return PAGE_IDS.indexOf(id) > -1 ? id : 'utama';
+}
+
+function showPage(id, moveFocus){
+  if (id === ACTIVE_PAGE) return;
+  const first = ACTIVE_PAGE === null;
+  ACTIVE_PAGE = id;
+  APP.dataset.page = id;
+
+  document.querySelectorAll('.page').forEach(p => {
+    const on = p.id === id;
+    p.classList.toggle('is-active', on);
+    if (on) p.removeAttribute('inert'); else p.setAttribute('inert', '');
+  });
+  document.querySelectorAll('.nav-item').forEach(a => {
+    const on = a.getAttribute('href') === '#' + id;
+    a.classList.toggle('active', on);
+    if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+
+  const page = document.getElementById(id);
+  page.scrollTop = 0;
+  document.title = id === 'utama' ? BASE_TITLE : page.dataset.title + ' · ' + BASE_TITLE;
+  /* the browser may try to scroll the hidden shell to a #target */
+  if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+
+  /* keyboard and screen-reader users land on the new page's heading */
+  if (!first && moveFocus){
+    const h = page.querySelector('h1, h2');
+    if (h) try{ h.focus({ preventScroll: true }); }catch(e){}
   }
+}
 
-  new IntersectionObserver(([entry]) => {
-    document.body.classList.toggle('past-hero', !entry.isIntersecting);
-  }, { rootMargin: '-40% 0px 0px 0px' }).observe(hero);
+window.addEventListener('hashchange', () => {
+  closeSheets();
+  showPage(pageFromHash(), true);
+});
+try{ history.scrollRestoration = 'manual'; }catch(e){}
+showPage(pageFromHash(), false);
 
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add('is-visible');
-      io.unobserve(entry.target);
-    });
-  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
-  reveals.forEach(el => io.observe(el));
-
-  const spy = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      const href = '#' + entry.target.id;
-      links.forEach(a => {
-        const on = a.getAttribute('href') === href;
-        a.classList.toggle('active', on);
-        if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
-      });
-    });
-  }, { rootMargin: '-45% 0px -50% 0px' });
-  document.querySelectorAll('main > section[id]').forEach(s => spy.observe(s));
-})();
+/* phones: tuck the bottom nav away while the keyboard is up */
+const TYPING_FIELDS = 'input[type="text"], input[type="number"], textarea';
+let typingTimer;
+document.addEventListener('focusin', e => {
+  if (!e.target.matches(TYPING_FIELDS)) return;
+  clearTimeout(typingTimer);
+  APP.classList.add('is-typing');
+});
+document.addEventListener('focusout', e => {
+  if (!e.target.matches(TYPING_FIELDS)) return;
+  clearTimeout(typingTimer);
+  /* bring the nav back only after the tap that caused the blur is over:
+     doing it at once shifts the layout, and the tap on "Hantar" would
+     land on whatever slid under the finger instead */
+  typingTimer = setTimeout(() => {
+    const el = document.activeElement;
+    if (!el || !el.matches(TYPING_FIELDS)) APP.classList.remove('is-typing');
+  }, 400);
+});
 
 /* =========================================================
    BACKGROUND MUSIC — AUTOPLAY
@@ -2102,7 +2172,7 @@ document.addEventListener('click', function(e){
         autoplay is always permitted. The song is already
         running silently and in sync, ready to be heard.
      3. Unmute on the guest's first touch anywhere on the
-        page: the RSVP button, a scroll, any tap at all.
+        page: the RSVP button, a tab, any tap at all.
         Because it is already playing, unmuting is instant
         with no loading gap.
 
@@ -2224,12 +2294,12 @@ function toggleMusic(){
 /* =========================================================
    OWNER SHEET — open / close
    ---------------------------------------------------------
-   The only overlay left on the page. While it is open the
-   page behind is inert, Escape closes it, and focus goes back
+   The only overlay left. While it is open the pages behind
+   are inert, Escape (or Back) closes it, and focus goes back
    to the name field afterwards.
    ========================================================= */
 let SHEET_RETURN_FOCUS = null;
-const PAGE_PARTS = ['main', '.site-header', '.site-footer', '.bottom-nav', '#musicToggle'];
+const PAGE_PARTS = ['.pages', '.bottom-nav', '#musicToggle'];
 
 function setPageInert(on){
   PAGE_PARTS.forEach(sel => {
@@ -2242,7 +2312,6 @@ function closeSheets(){
   const open = document.querySelectorAll('.sheet.open');
   if (!open.length) return;
   open.forEach(s => s.classList.remove('open'));
-  document.documentElement.classList.remove('sheet-open');
   setPageInert(false);
   const back = SHEET_RETURN_FOCUS;
   SHEET_RETURN_FOCUS = null;
@@ -2388,7 +2457,7 @@ function selectMine(key){
   EDITING_KEY = key;
   fillForm(entry);
   setSubmitLabel(true);
-  document.getElementById('atResult').innerHTML = '';
+  showRsvpForm();
   renderMine();
 }
 
@@ -2401,7 +2470,7 @@ function newGuestForm(){
   EDITING_KEY = null;
   document.getElementById('attendForm').reset();
   fillForm(null);
-  document.getElementById('atResult').innerHTML = '';
+  showRsvpForm();
   setSubmitLabel(false);
   renderMine();
   document.getElementById('atName').focus();
@@ -2426,7 +2495,7 @@ function renderMine(){
     chips.innerHTML = list.map(m => {
       const key = nameKey(m.name), active = key === EDITING_KEY;
       return '<button type="button" class="mine-chip' + (active ? ' active' : '') + '" ' +
-               'data-key="' + escapeHTML(key) + '" aria-pressed="' + active + '">' +
+               'data-key="' + escapeHTML(key) + '" aria-pressed="' + active + '" title="' + escapeHTML(m.name) + '">' +
                escapeHTML(m.name) + '</button>';
     }).join('') +
       (DEVICE_SLOTS.left > 0
@@ -2436,6 +2505,7 @@ function renderMine(){
     banner.classList.remove('show');
     chips.innerHTML = '';
   }
+  document.getElementById('rsvpBody').classList.toggle('is-editing', list.length > 0);
 
   if (slotEl){
     if (DEVICE_SLOTS.left <= 0){
@@ -2656,7 +2726,18 @@ function setSubmitBusy(busy, label){
   else setSubmitLabel(btn.dataset.mode === 'update');
 }
 
+/* the confirmation takes the form's place, so the page still fits one
+   screen; the form keeps the guest's answers for "Kemaskini Jawapan" */
 const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+
+function showRsvpForm(){
+  const result = document.getElementById('atResult');
+  result.hidden = true;
+  result.innerHTML = '';
+  document.getElementById('rsvpCard').hidden = false;
+  document.getElementById('rsvpBody').classList.remove('is-done');
+  document.getElementById('rsvp').scrollTop = 0;
+}
 
 function renderResult(name, pax, status, out){
   const el = document.getElementById('atResult');
@@ -2664,11 +2745,11 @@ function renderResult(name, pax, status, out){
   const notes = [];
   if (out && out.replaced)      notes.push('Rekod anda sebelum ini telah dikemaskini.');
   if (out && out.namesakes > 0) notes.push('Nota: ada tetamu lain dengan nama yang sama. Rekod anda disimpan berasingan.');
-  if (out && out.has_wish)      notes.push('Ucapan anda telah dipaparkan di bahagian <a href="#ucapan">Ucapan</a>.');
+  if (out && out.has_wish)      notes.push('Ucapan anda telah dipaparkan di halaman <a href="#ucapan">Ucapan</a>.');
   el.innerHTML =
     '<div class="confirm">' +
       '<div class="confirm-icon">' + CHECK_ICON + '</div>' +
-      '<h3 class="confirm-title">Terima kasih, ' + escapeHTML(name) + '!</h3>' +
+      '<h3 class="confirm-title" tabindex="-1">Terima kasih, ' + escapeHTML(name) + '!</h3>' +
       '<p class="confirm-msg">' +
         (hadir
           ? 'Kehadiran anda telah direkodkan. :)'
@@ -2676,10 +2757,25 @@ function renderResult(name, pax, status, out){
       '</p>' +
       '<p class="confirm-meta">' + (hadir ? pax + ' pax &middot; Hadir' : 'Tidak Hadir') + '</p>' +
       notes.map(n => '<p class="confirm-note">' + n + '</p>').join('') +
+      '<div class="confirm-actions' + (hadir ? ' two' : '') + '">' +
+        '<button type="button" class="btn btn-outline" data-action="edit">Kemaskini Jawapan</button>' +
+        (hadir ? '<a class="btn btn-primary" href="#lokasi">Lihat Lokasi</a>' : '') +
+      '</div>' +
     '</div>';
-  requestAnimationFrame(() =>
-    el.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' }));
+  document.getElementById('rsvpCard').hidden = true;
+  document.getElementById('rsvpBody').classList.add('is-done');
+  el.hidden = false;
+  document.getElementById('rsvp').scrollTop = 0;
+  /* the submit button that had focus is gone; land on the thank-you */
+  const title = el.querySelector('.confirm-title');
+  if (title) try{ title.focus({ preventScroll: true }); }catch(e){}
 }
+document.getElementById('atResult').addEventListener('click', e => {
+  if (!e.target.closest('[data-action="edit"]')) return;
+  showRsvpForm();
+  const name = document.getElementById('rsvpTitle');
+  if (name) try{ name.focus({ preventScroll: true }); }catch(err){}
+});
 
 document.getElementById('attendForm').addEventListener('submit', async function(e){
   e.preventDefault();
@@ -2763,31 +2859,15 @@ document.getElementById('attendForm').addEventListener('submit', async function(
    wishes cannot work out who is actually coming.
    The owner's delete clears the MESSAGE and keeps the RSVP row,
    so removing a wish never changes the headcount.
-   Long lists show the newest few first, with a button for the rest.
+   The list scrolls inside its own box, so the page still fits.
    ========================================================= */
 let WISHES_LOADED = false;
-let WISHES_EXPANDED = false;
-const WISH_PREVIEW = 6;
 
 function renderWishCount(){
   const el = document.getElementById('atWish');
   const out = document.getElementById('wishCount');
   if (el && out) out.textContent = el.value.length + ' / 500';
 }
-
-function paintWishMore(total){
-  const list = document.getElementById('wishList');
-  const more = document.getElementById('wishMore');
-  const long = total > WISH_PREVIEW;
-  list.classList.toggle('is-collapsed', long && !WISHES_EXPANDED);
-  more.hidden = !long;
-  more.setAttribute('aria-expanded', WISHES_EXPANDED ? 'true' : 'false');
-  more.textContent = WISHES_EXPANDED ? 'Tunjuk kurang' : 'Lihat semua ucapan (' + total + ')';
-}
-document.getElementById('wishMore').addEventListener('click', () => {
-  WISHES_EXPANDED = !WISHES_EXPANDED;
-  paintWishMore(document.querySelectorAll('#wishList .wish-item').length);
-});
 
 async function loadWishes(announce){
   const el = document.getElementById('wishList');
@@ -2814,12 +2894,10 @@ async function loadWishes(announce){
           '</div>' +
         '</div>').join('');
     }
-    paintWishMore(rows.length);
     if (announce) showToast('Ucapan dikemaskini ✓');
   }catch(err){
     console.error(err);
     el.innerHTML = '<div class="empty-state">Failed to load wishes and pray. Please reload the page.</div>';
-    paintWishMore(0);
   }
 }
 
@@ -2864,7 +2942,6 @@ function openOwner(){
   SHEET_RETURN_FOCUS = document.getElementById('atName');
   el.classList.add('open');
   el.scrollTop = 0;
-  document.documentElement.classList.add('sheet-open');
   setPageInert(true);
   const first = el.querySelector('.icon-btn');
   if (first) requestAnimationFrame(() => first.focus({ preventScroll: true }));
@@ -2907,7 +2984,7 @@ function renderOwner(d){
         '</div>' +
         '<span class="badge ' + (r.status === 'Hadir' ? 'hadir' : 'tidak') + '">' + r.status + '</span>' +
       '</div>' +
-      (r.wish ? '<div class="msg" style="font-size:1.0625rem; margin-top:6px;">' + escapeHTML(r.wish) + '</div>' : '') +
+      (r.wish ? '<div class="msg" style="font-size:1rem; margin-top:6px;">' + escapeHTML(r.wish) + '</div>' : '') +
     '</div>').join('');
 }
 async function refreshOwner(silent){
