@@ -351,6 +351,9 @@
             color: rgba(247, 238, 226, .86);
             margin: 14px 0 0;
             line-height: 1.7;
+            max-width: 250px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .cover-foot { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
@@ -1267,6 +1270,34 @@
                 .pr-meta .st.tidak { color: var(--rose); }
             .pr-wish { font-family: var(--serif); font-style: italic; font-size: 11.5pt; line-height: 1.5; margin: 5pt 0 0; padding-left: 8pt; border-left: 1.5pt solid var(--gold-line); white-space: pre-wrap; overflow-wrap: anywhere; }
             .pr-end { text-align: center; font-size: 9pt; color: #6F5B5A; margin-top: 16pt; }
+
+        /* wish cards: 2 x 4 per A4 page, dashed lines are the cut lines */
+        .wc-page { width: 180mm; height: 262mm; display: flex; flex-direction: column; break-after: page; page-break-after: always; }
+            .wc-page:last-child { break-after: auto; page-break-after: auto; }
+        .wc-head { flex: none; height: 6mm; margin: 0; font-family: var(--sans); font-size: 7pt; letter-spacing: .08em; color: #8A6A37; text-align: center; }
+        .wc-grid { flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(var(--rows, 4), 64mm); border-top: .6pt dashed #A8968C; border-left: .6pt dashed #A8968C; }
+        .wc-cell { min-width: 0; min-height: 0; display: flex; padding: 3.2mm; border-right: .6pt dashed #A8968C; border-bottom: .6pt dashed #A8968C; }
+        .wc-card {
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 4mm 5.5mm 3.2mm;
+            border: .8pt solid #C9A35F;
+            border-radius: 2.4mm;
+            overflow: hidden;
+            color: #3B2A2D;
+        }
+            .wc-card::before { content: ""; position: absolute; inset: 1.1mm; border: .35pt solid #E2CFA6; border-radius: 1.7mm; pointer-events: none; }
+        .wc-orn { flex: none; display: block; width: 26mm; height: 5.5mm; }
+        .wc-wish { flex: 1 1 auto; min-height: 0; width: 100%; margin: 1.6mm 0 1.2mm; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+            .wc-wish span { display: block; font-family: var(--serif); font-style: italic; line-height: 1.42; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .wc-name { flex: none; max-width: 100%; margin: 0; font-family: var(--script); line-height: 1.15; color: #7A3E50; overflow-wrap: anywhere; }
+        .wc-foot { flex: none; margin: 1mm 0 0; font-family: var(--sans); font-size: 5.6pt; letter-spacing: .22em; text-transform: uppercase; color: #8A6A37; }
     </style>
 </head>
 <body>
@@ -1441,8 +1472,8 @@
             <div class="map-wrap">
                 <iframe id="mapFrame" title="Peta lokasi majlis" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
-            <!-- Nota pemilik: alamat berdasarkan carian "CMi Prestige Hall, Berjaya Megamall, Kuantan".
-                 Sila semak semula pin Google Maps sebenar jika ada perbezaan tingkat/unit. -->
+            <!-- "Buka di Google Maps" opens WEDDING.mapsLink (the family's own pin).
+                 Waze and the small map use the same pin (WEDDING.lat / WEDDING.lng). -->
 
             <div class="btn-stack">
                 <a class="btn primary" id="gmapsBtn" href="#" target="_blank" rel="noopener">
@@ -1666,14 +1697,18 @@
             <div class="owner-actions">
                 <button type="button" class="btn primary" onclick="printOwnerReport()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V3h10v6" /><rect x="3" y="9" width="18" height="8" rx="2" /><path d="M7 14h10v7H7z" /></svg>
-                    Cetak / Simpan PDF
+                    PDF senarai RSVP
+                </button>
+                <button type="button" class="btn" onclick="printWishCards()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="7" rx="1" /><rect x="13" y="4" width="8" height="7" rx="1" /><rect x="3" y="13" width="8" height="7" rx="1" /><rect x="13" y="13" width="8" height="7" rx="1" /></svg>
+                    PDF kad ucapan (8 / halaman)
                 </button>
                 <button type="button" class="btn ghost" onclick="downloadRSVPCSV()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M4 19h16" /></svg>
                     Muat turun CSV
                 </button>
             </div>
-            <p class="owner-note">PDF mengikut tapisan status dan susunan yang dipilih di bawah.</p>
+            <p class="owner-note">PDF senarai mengikut tapisan dan susunan di bawah. Kad ucapan: 8 ucapan setiap halaman A4, potong mengikut garisan putus-putus. Pilih "Simpan sebagai PDF" atau terus cetak.</p>
 
             <div class="owner-tools">
                 <div class="search">
@@ -1748,10 +1783,15 @@ const WEDDING = {
   dateShort: "19.12.2026",
   hijriText: "9 Rejab 1448H",
   timeText:  "11.00 AM – 4.00 PM",
-  venueName: "CMi Prestige Hall",
-  venueArea: "Berjaya Megamall, Jalan Tun Ismail, 25000 Kuantan, Pahang",
-  venueTown: "Kuantan",
-  venueAddress: "CMi Prestige Hall, Berjaya Megamall, Jalan Tun Ismail, 25000 Kuantan, Pahang, Malaysia",
+  venueName: "CMi Prestige Hall Tanah Putih",
+  venueArea: "Lot 16606, Batu 3, Industrial Area, 25150 Kuantan, Pahang",
+  venueTown: "Kuantan, Pahang",
+  venueAddress: "CMi Prestige Hall Tanah Putih, Lot 16606, Batu 3, Industrial Area, 25150 Kuantan, Pahang",
+  /* the exact pin shared by the family; "Buka di Google Maps" opens this */
+  mapsLink: "https://maps.app.goo.gl/VsP173M5DenFKS9N9",
+  /* the same pin as coordinates, for Waze and the small map */
+  lat: 3.7870992,
+  lng: 103.2991403,
   /* Contacts on the "Hubungi" tab. A contact with an empty name or phone
      is hidden, so guests never see a placeholder. Phone: country code + number,
      digits only (e.g. 60123456789). */
@@ -2221,13 +2261,16 @@ function showToast(msg){
    only loads when the guest opens the Lokasi tab
    ========================================================= */
 const MAP_Q = encodeURIComponent(WEDDING.venueAddress || WEDDING.venueName);
+const HAS_PIN = typeof WEDDING.lat === 'number' && typeof WEDDING.lng === 'number';
+const PIN = HAS_PIN ? WEDDING.lat + ',' + WEDDING.lng : '';
 (function initLocation(){
-  $('gmapsBtn').href = 'https://www.google.com/maps/search/?api=1&query=' + MAP_Q;
-  $('wazeBtn').href  = 'https://waze.com/ul?q=' + MAP_Q + '&navigate=yes';
+  $('gmapsBtn').href = WEDDING.mapsLink || ('https://www.google.com/maps/search/?api=1&query=' + (HAS_PIN ? PIN : MAP_Q));
+  $('wazeBtn').href  = HAS_PIN ? 'https://waze.com/ul?ll=' + PIN + '&navigate=yes'
+                               : 'https://waze.com/ul?q=' + MAP_Q + '&navigate=yes';
 })();
 function loadMap(){
   const f = $('mapFrame');
-  if (f && !f.getAttribute('src')) f.src = 'https://www.google.com/maps?q=' + MAP_Q + '&output=embed';
+  if (f && !f.getAttribute('src')) f.src = 'https://www.google.com/maps?q=' + (HAS_PIN ? PIN : MAP_Q) + '&z=16&output=embed';
 }
 
 /* =========================================================
@@ -2421,8 +2464,8 @@ function showConfirmation(name, pax, status, out){
 function editResponse(){
   $('atResult').hidden = true;
   $('attendForm').hidden = false;
+  $('atName').focus({ preventScroll: true });   /* immediately, so typing never lands in the wrong box */
   scrollMainTo($('rsvpCard'), 16);
-  setTimeout(() => $('atName').focus({ preventScroll: true }), REDUCED ? 0 : 350);
 }
 
 /* =========================================================
@@ -2740,6 +2783,15 @@ function buildPrintReport(){
     '</div>';
 }
 
+/* the page title becomes the suggested PDF file name */
+function printWithTitle(title){
+  const old = document.title;
+  const restore = () => { document.title = old; window.removeEventListener('afterprint', restore); };
+  document.title = title;
+  window.addEventListener('afterprint', restore);
+  setTimeout(() => window.print(), 80);
+}
+
 function printOwnerReport(){
   if (!OWNER_CODE){ showToast('Sila masuk mod pemilik terlebih dahulu.'); return; }
   if (!OWNER_ROWS.length){ showToast('Tiada rekod untuk dicetak.'); return; }
@@ -2747,7 +2799,82 @@ function printOwnerReport(){
   document.body.classList.add('print-report');
   /* the class stays on: it only affects printing, and the report
      is cleared when the owner signs out */
-  setTimeout(() => window.print(), 80);
+  printWithTitle('Senarai RSVP - ' + WEDDING.groomShort + ' & ' + WEDDING.brideShort);
+}
+
+/* =========================================================
+   WISH CARDS FOR THE BOARD
+   ---------------------------------------------------------
+   Every wish becomes a small card, 8 per A4 page (2 x 4),
+   with dashed cut lines. Long wishes shrink to fit their
+   card, so nothing is cut off.
+   ========================================================= */
+const WC_ORN = '<svg class="wc-orn" viewBox="0 0 96 20" aria-hidden="true">' +
+  '<path d="M4 10 H34 M62 10 H92" stroke="#C9A35F" stroke-width=".7" />' +
+  '<path d="M36 10 C 39 6 43 6 45 9 C 42 10 39 11 36 10 Z M60 10 C 57 6 53 6 51 9 C 54 10 57 11 60 10 Z" fill="#A9B48F" />' +
+  '<g transform="translate(48 10)">' +
+    [0, 72, 144, 216, 288].map((a, i) => '<path d="M0 0 C -3.2 -1.7 -3.4 -5.3 0 -5.8 C 3.4 -5.3 3.2 -1.7 0 0 Z" fill="' + (i % 2 ? '#EBC3CC' : '#E0A9B6') + '" transform="rotate(' + a + ')" />').join('') +
+    '<circle r="1.4" fill="#C9A35F" />' +
+  '</g></svg>';
+
+function wishFontPt(len){
+  return len <= 70 ? 13 : len <= 140 ? 11.5 : len <= 230 ? 10.2 : len <= 340 ? 9 : 8.2;
+}
+function namePt(len){
+  return len <= 22 ? 17 : len <= 36 ? 14.5 : len <= 56 ? 12.5 : 11;
+}
+
+function buildWishCards(){
+  const rows = OWNER_ROWS.filter(r => r.wish && String(r.wish).trim())
+    .slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  const per = 8, pages = Math.ceil(rows.length / per);
+  const couple = escapeHTML(WEDDING.groomShort) + ' &amp; ' + escapeHTML(WEDDING.brideShort);
+  let html = '';
+  for (let p = 0; p < pages; p++){
+    let cells = '';
+    const onPage = Math.min(per, rows.length - p * per), slots = Math.ceil(onPage / 2) * 2;
+    for (let i = 0; i < slots; i++){
+      const r = rows[p * per + i];
+      if (!r){ cells += '<div class="wc-cell"></div>'; continue; }
+      const wish = String(r.wish).trim();
+      cells += '<div class="wc-cell"><div class="wc-card">' + WC_ORN +
+        '<div class="wc-wish"><span style="font-size:' + wishFontPt(wish.length) + 'pt">\u201C' + escapeHTML(wish) + '\u201D</span></div>' +
+        '<p class="wc-name" style="font-size:' + namePt(String(r.name).length) + 'pt">' + escapeHTML(r.name) + '</p>' +
+        '<p class="wc-foot">' + couple + ' &middot; ' + escapeHTML(WEDDING.dateShort) + '</p>' +
+      '</div></div>';
+    }
+    html += '<section class="wc-page"><p class="wc-head">Kad ucapan ' + couple + ' &middot; halaman ' + (p + 1) + ' / ' + pages +
+      ' &middot; potong mengikut garisan putus-putus</p><div class="wc-grid" style="--rows:' + (slots / 2) + '">' + cells + '</div></section>';
+  }
+  $('printReport').innerHTML = html;
+  return rows.length;
+}
+
+/* shrink any wish or name that is too long for its card; measured
+   off-screen at the real printed size before the print dialog opens */
+function fitWishCards(){
+  const box = $('printReport');
+  box.style.cssText = 'display:block;position:fixed;left:-10000px;top:0;width:180mm;visibility:hidden;';
+  box.querySelectorAll('.wc-card').forEach(card => {
+    const wrap = card.querySelector('.wc-wish'), txt = wrap.querySelector('span'), name = card.querySelector('.wc-name');
+    let pt = parseFloat(txt.style.fontSize);
+    while (txt.offsetHeight > wrap.clientHeight && pt > 6.6){ pt -= .4; txt.style.fontSize = pt + 'pt'; }
+    let np = parseFloat(name.style.fontSize);
+    const lineMax = np * 1.15 * 2 * 1.3333 + 2;           /* two lines, in px */
+    while (name.offsetHeight > lineMax && np > 9){ np -= .5; name.style.fontSize = np + 'pt'; }
+  });
+  box.style.cssText = '';
+}
+
+async function printWishCards(){
+  if (!OWNER_CODE){ showToast('Sila masuk mod pemilik terlebih dahulu.'); return; }
+  const n = buildWishCards();
+  if (!n){ $('printReport').innerHTML = ''; showToast('Belum ada ucapan untuk dicetak.'); return; }
+  try{ if (document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
+  fitWishCards();
+  document.body.classList.add('print-report');
+  showToast(n + ' ucapan, ' + Math.ceil(n / 8) + ' halaman');
+  printWithTitle('Kad Ucapan - ' + WEDDING.groomShort + ' & ' + WEDDING.brideShort);
 }
 
 function escapeHTML(str){
